@@ -182,7 +182,6 @@ cython_debug/
 .idea/**/shelf
 .idea/modules.xml
 
-
 # AWS User-specific
 .idea/**/aws.xml
 
@@ -197,7 +196,6 @@ cython_debug/
 .idea/**/dynamic.xml
 .idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
-.idea/misc.xml
 
 # Gradle
 .idea/**/gradle.xml
@@ -229,4 +227,5 @@ cmake-build-*/
 out/
 
 # mpeltonen/sbt-idea plugin
-.idea_modules/
+.idea/
+
