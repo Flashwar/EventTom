@@ -46,6 +46,9 @@ INSTALLED_APPS = [
     "backend.apps.BackendConfig",
     "rest_framework",
     "rest_framework_simplejwt",
+
+    # installed apps
+    #"django_extensions",
 ]
 
 REST_FRAMEWORK = {
