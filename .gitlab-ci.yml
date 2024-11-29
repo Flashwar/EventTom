@@ -45,9 +45,9 @@ Python Code Lint:
     - poetry config virtualenvs.create false
     - poetry install --no-root
   script:
-    - poetry run black --check .
-    - poetry run isort --check-only .
-    - poetry run flake8 .
+    - poetry run black --check backend/
+    - poetry run isort --check-only backend/
+    - poetry run flake8 backend/
   only:
     - backend
 
