@@ -4,9 +4,6 @@ stages:
   - flutter-test
   - flutter-build
 
-Variables:
-  SECRET_KEY: $SECRET_KEY
-
 
 default:
   cache:
@@ -42,6 +39,8 @@ default:
 Migrations Check:
   stage: migrations
   image: python:3.11
+  variables:
+    SECRET_KEY: $SECRET_KEY
   before_script:
     - pip install poetry "psycopg[binary]"
     - poetry config virtualenvs.create false
