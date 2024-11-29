@@ -52,7 +52,8 @@ Migrations Check:
     - backend
 
 variables:
-  API_TOKEN: $DEPLOYMENT_TOKEN
+  apiToken: $DEPLOYMENT_TOKEN
+  app: "./"
 
 Deploy to Azure:
   stage: deploy
