@@ -72,6 +72,7 @@ Deploy to Azure:
   stage: deploy
   image: registry.gitlab.com/static-web-apps/azure-static-web-apps-deploy
   script:
+    - echo "App wird deployed..."
   only:
     - backend
 
