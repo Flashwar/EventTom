@@ -65,13 +65,13 @@ Migrations Check:
   only:
     - backend
 
+variables:
+  API_TOKEN: $DEPLOYMENT_TOKEN
+
 Deploy to Azure:
   stage: deploy
-  image: mcr.microsoft.com/azure-cli:latest
+  image: registry.gitlab.com/static-web-apps/azure-static-web-apps-deploy
   script:
-    - az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
-    - echo "Deploying application to Azure Web App..."
-    - az webapp up --name $AZURE_WEBAPP_NAME --resource-group $AZURE_RESOURCE_GROUP --runtime "PYTHON:3.11"
   only:
     - backend
 
