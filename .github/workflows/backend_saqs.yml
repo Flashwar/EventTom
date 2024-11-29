@@ -13,7 +13,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -22,9 +24,8 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: install libpq-dev
+      - name: install DB requirements
         run: |
-          printenv
           apt-get update -y && apt-get upgrade -y
           pip install "psycopg[binary]"
           sudo apt install libpq5 
