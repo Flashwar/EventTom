@@ -4,6 +4,10 @@ stages:
   - flutter-test
   - flutter-build
 
+Variables:
+  SECRET_KEY: $SECRET_KEY
+
+
 default:
   cache:
     paths:
