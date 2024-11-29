@@ -41,6 +41,7 @@ Migrations Check:
   image: python:3.11
   variables:
     SECRET_KEY: $SECRET_KEY
+    DATABASE_URL: $DATABASE_URL
   before_script:
     - pip install poetry "psycopg[binary]"
     - poetry config virtualenvs.create false
