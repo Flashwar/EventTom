@@ -31,7 +31,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['saqs-b5h9dwfnfuewamam.francecentral-01.azurewebsites.net',]
 
 
 # Application definition
@@ -114,7 +114,6 @@ DATABASES = {
         'PORT': 5432,
     }
 }
-print(type(tmpPostgres.path.replace('/', '')))
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
