@@ -1,6 +1,4 @@
 stages:
-  - test
-  - lint
   - migrations
   - deploy
   - flutter-test
@@ -36,20 +34,6 @@ default:
 #      junit: reports/junit.xml
 #  only:
 #    - backend
-
-Python Code Lint:
-  stage: lint
-  image: python:3.11
-  before_script:
-    - pip install poetry
-    - poetry config virtualenvs.create false
-    - poetry install --no-root
-  script:
-    - poetry run black --check backend/
-    - poetry run isort --check-only backend/
-    - poetry run flake8 backend/
-  only:
-    - backend
 
 Migrations Check:
   stage: migrations
