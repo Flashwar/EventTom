@@ -31,7 +31,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['saqs-b5h9dwfnfuewamam.francecentral-01.azurewebsites.net',]
+ALLOWED_HOSTS = ['saqs-b5h9dwfnfuewamam.francecentral-01.azurewebsites.net','127.0.0.1',]
 
 
 # Application definition
@@ -103,7 +103,8 @@ WSGI_APPLICATION = "EventTom.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
+tmpPostgres = urlparse(os.getenv('DATABASE_URL'))
+print(tmpPostgres)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
