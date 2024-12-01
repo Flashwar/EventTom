@@ -1,7 +1,31 @@
+import 'dart:html';
+
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:math';
+import 'dart:ui';
+
+import 'package:intl/intl.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
+import 'package:url_launcher/url_launcher_string.dart';
+import 'package:http/http.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+const double textWidth = 300;
+String user_id = '';
+String current_username = '';
+int isadmin = 2;
+Color red_colour = Color.fromRGBO(202, 255, 248, 1);
+Color blue_colour = Color.fromRGBO(50, 121, 194, 1.00);
+Color black_colour = Color.fromRGBO(33, 37, 41, 1.00);
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -11,115 +35,364 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'EventTim',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: Scaffold(
+        appBar: AppBar(
+          backgroundColor: red_colour,
+          title: const Text('EventTim',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontFamily: 'Arial', color: Colors.white)),
+        ),
+        body: LoginPage(title: 'Login Page'),
+      ),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key, required this.title});
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<LoginPage> createState() => _LoginPage();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _LoginPage extends State<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  bool? LoggedIn = false;
+
+  Future<Response> sendPOST(final body, String target) async {
+    final response = await post(
+      Uri.parse('https://mux-2024.azurewebsites.net/' + target),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token b3d9c5f7b5ea782a8b76bbdec59bb9b5aff5e554'
+      },
+      body: body,
+    );
+
+    return response;
+  }
+
+  Future<void> _pw_reset(String name) async {
+    final body = jsonEncode({'username': name});
+    sendPOST(body, 'api/password_reset/');
+  }
+
+  Future<void> _try_login(String pw, String id) async {
+    final body = jsonEncode({'password': pw, 'username': id});
+    /*final response = await sendPOST(body, '/api/login/');
+    if (response.statusCode == 200) {
+    
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response.statusCode.toString())));
+      final Map<String, dynamic> status = jsonDecode(response.body);
+      user_id = status['user_id'];
+      current_username = id;
+
+      if (LoggedIn != true) {
+        clearlog();
+      }
+      Navigator.push(context, MaterialPageRoute(builder: (_) => UserPage()));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Logging in...')),
+      );
+      */ //reused when API added
+    if (1 == 1) {
+      if (LoggedIn != true) {
+        clearlog();
+      }
+      if (isadmin == 0) {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => UserPage()));
+      }
+      if (isadmin == 1) {
+        Navigator.push(
+            context, MaterialPageRoute(builder: (_) => CreatorPage()));
+      }
+      if (isadmin == 2) {
+        Navigator.push(
+            context, MaterialPageRoute(builder: (_) => ManagerPage()));
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Logging in...')),
+      );
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Loggin failed')));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Form(
+        key: _formKey,
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+            const Center(
+              child: Text('EventTim'),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            const SizedBox(height: 20),
+            const Center(
+              child: Text('Login'),
+            ),
+            Center(
+              child: SizedBox(
+                width: 400,
+                child: TextFormField(
+                  controller: _usernameController,
+                  decoration: const InputDecoration(labelText: 'Benutzername'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Benutzername';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ),
+            Center(
+              child: SizedBox(
+                width: 400,
+                child: TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(labelText: 'Passwort'),
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Passwort';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ),
+            Center(
+              child: Checkbox(
+                value: LoggedIn,
+                onChanged: (bool? value) {
+                  setState(() {
+                    LoggedIn = value;
+                  });
+                },
+              ),
+            ),
+            const Text('Angemeldet Bleiben'),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                shape: const BeveledRectangleBorder(),
+              ),
+              onPressed: () {
+                _try_login(_passwordController.text, _usernameController.text);
+              },
+              child: const Text('Einloggen',
+                  style: TextStyle(fontFamily: 'Arial', color: Colors.white)),
+            ),
+            const SizedBox(height: 100),
+            Center(
+              child: InkWell(
+                child: const Text('Passwort vergessen'),
+                onTap: () {
+                  showDialog(
+                      context: context,
+                      builder: (context) {
+                        return resetpw();
+                      });
+                },
+              ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+
+  Widget resetpw() {
+    return Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
+        elevation: 16,
+        child: Column(children: <Widget>[
+          const Text('Passwort Resetten', textAlign: TextAlign.left),
+          const SizedBox(height: 10),
+          Container(
+              child: Column(children: <Widget>[
+            const Text('Nutzername', textAlign: TextAlign.left),
+            Center(
+              child: SizedBox(
+                width: textWidth,
+                child: TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(labelText: 'Nutzername'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Nutzername';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            Row(children: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  shape: const BeveledRectangleBorder(),
+                  alignment: Alignment.centerLeft,
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Abbrechen',
+                    style: TextStyle(fontFamily: 'Arial', color: blue_colour)),
+              ),
+              Spacer(),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: blue_colour,
+                  shape: const BeveledRectangleBorder(),
+                  alignment: Alignment.centerRight,
+                ),
+                onPressed: () {
+                  _pw_reset(_nameController.text);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Reset Message sent')),
+                  );
+                },
+                child: const Text('Passwort zurücksetzen',
+                    style: TextStyle(fontFamily: 'Arial', color: Colors.white)),
+              ),
+            ]),
+          ])),
+        ]));
+  }
+
+  void clearlog() {
+    _usernameController.clear();
+    _passwordController.clear();
+  }
+}
+
+class UserPage extends StatelessWidget {
+  final List<String> artifacts = [
+    'Event1',
+    'Event2',
+    'Event3',
+    'Event4',
+    'Event5'
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Artifacts')),
+      body: ListView.builder(
+        itemCount: artifacts.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(artifacts[index]),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${artifacts[index]} clicked!')),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class ManagerPage extends StatelessWidget {
+  final List<String> artifacts = [
+    'EventA',
+    'Event2',
+    'Event3',
+    'Event4',
+    'Event5'
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Artifacts')),
+      body: ListView.builder(
+        itemCount: artifacts.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(artifacts[index]),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${artifacts[index]} clicked!')),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class CreatorPage extends StatelessWidget {
+  final List<String> artifacts = [
+    'EventB',
+    'Event2',
+    'Event3',
+    'Event4',
+    'Event5'
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Artifacts')),
+      body: ListView.builder(
+        itemCount: artifacts.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(artifacts[index]),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${artifacts[index]} clicked!')),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class User {
+  final String name;
+  final String id;
+
+  User({
+    required this.id,
+    required this.name,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      name: json['username'],
+      id: json['participant_id'],
     );
   }
 }
