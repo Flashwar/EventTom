@@ -1,67 +1,8 @@
 stages:
-  - migrations
-  - deploy
+
   - flutter-test
   - flutter-build
 
-
-default:
-  cache:
-    paths:
-      - ~/.cache/pip/
-      - .cache/pypoetry
-      - .pub-cache/
-  before_script:
-    - apt-get -y update && apt-get -y install apt-utils
-    - apt-get -y upgrade
-
-# Backend Jobs
-#Unit Tests:
-#  stage: test
-#  image: python:3.11
-#  before_script:
-#    - pip install poetry "psycopg[binary]"
-#    - poetry config virtualenvs.create false
-#    - poetry install --no-root
-#  script:
-#    - poetry run pytest
-#  artifacts:
-#    name: "test-results"
-#    when: always
-#    expire_in: 1 week
-#    paths:
-#      - reports/
-#    reports:
-#      junit: reports/junit.xml
-#  only:
-#    - backend
-
-Migrations Check:
-  stage: migrations
-  image: python:3.11
-  variables:
-    SECRET_KEY: $SECRET_KEY
-    DATABASE_URL: $DATABASE_URL
-  before_script:
-    - pip install poetry "psycopg[binary]"
-    - poetry config virtualenvs.create false
-    - poetry install --no-root
-  script:
-    - python manage.py collectstatic
-  only:
-    - backend
-
-variables:
-  apiToken: $DEPLOYMENT_TOKEN
-  app: "./"
-
-Deploy to Azure:
-  stage: deploy
-  image: registry.gitlab.com/static-web-apps/azure-static-web-apps-deploy
-  script:
-    - echo "App wird deployed..."
-  only:
-    - backend
 
 # Flutter Jobs
 Flutter Test:
