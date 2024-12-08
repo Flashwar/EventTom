@@ -1,9 +1,10 @@
 import json
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
-class NotificationConsumer(AsyncJsonWebsocketConsumer):
+class AdminNotificationConsumer(AsyncJsonWebsocketConsumer):
+
     async def connect(self):
-        self.group_name = "notification"
+        self.group_name = "BuyingNotificationAdmin"
         await self.channel_layer.group_add(self.group_name, self.channel_name)
 
         await self.accept()
@@ -11,16 +12,8 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
-    async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        message = text_data_json['message']
-
-        event = {
-            'type': 'send_message',
-            'message': message
-        }
-
-        await self.channel_layer.group_send(self.group_name, event)
+    # Receive  be ignored, because the channel direction is only unidirectional
+    # Backend -> Frontend
 
     async def send_message(self, event):
         message = event['message']
