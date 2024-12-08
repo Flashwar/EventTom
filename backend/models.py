@@ -1,24 +1,19 @@
 import uuid
+
+from django.contrib.auth.models import User
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 
-
-class Customer(models.Model):
-    firstname = models.CharField(max_length=100)
-    lastname = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
-
-
 class Employee(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    staff_number = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     class JobPosition(models.TextChoices):
         EVENTCREATOR = "EC", _("Eventcreator")
         EVENTMANGER = "EM", _("Eventmanager")
 
     position = models.CharField(max_length=2, choices=JobPosition.choices)
-    # Berechtigungen
 
     def get_job_position(self) -> JobPosition:
         # Get value from choices enum
@@ -47,7 +42,7 @@ class Event(models.Model):
 
 class Coupon(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    owner = models.OneToOneField(Customer, on_delete=models.CASCADE, related_name='coupon')
+    owner = models.OneToOneField(User, on_delete=models.CASCADE, related_name='coupon')
     depleted = models.BooleanField(default=False)
 
 class TicketTyp(models.Model):
@@ -56,7 +51,7 @@ class TicketTyp(models.Model):
 
 class Ticket(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='tickets')
-    owner = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     ticket_typ = models.ForeignKey(TicketTyp, on_delete=models.SET_NULL, null=True)
     bought_time = models.DateTimeField(default=now)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
