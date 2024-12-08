@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Beispiel</title>
+</head>
+<body>
+    <h1>WebSocket Verbindung</h1>
+
+    <label for="inputData">Daten eingeben:</label>
+    <input type="text" id="inputData" placeholder="Daten hier eingeben">
+
+    <button id="connectButton">WebSocket Verbindung herstellen</button>
+
+    <h2>Nachricht senden:</h2>
+    <button id="sendButton" disabled>Nachricht senden</button>
+
+    <h3>Verbindungsstatus: <span id="status">Nicht verbunden</span></h3>
+
+    <h3>Nachricht vom Server:</h3>
+    <div id="serverMessages" style="border: 1px solid black; padding: 10px; height: 100px; overflow-y: auto;">
+        <!-- Hier erscheinen Nachrichten vom Server -->
+    </div>
+
+    <script>
+        // WebSocket-URL (verwende ws:// oder wss://)
+        const websocketUrl = 'ws://127.0.0.1:8000/ws/admin/notifications/';
+
+        let socket;
+
+        // Elemente vom DOM
+        const connectButton = document.getElementById('connectButton');
+        const sendButton = document.getElementById('sendButton');
+        const inputData = document.getElementById('inputData');
+        const statusDisplay = document.getElementById('status');
+        const serverMessages = document.getElementById('serverMessages');
+
+        // WebSocket-Verbindung herstellen, wenn der Button gedrückt wird
+        connectButton.addEventListener('click', () => {
+            socket = new WebSocket(websocketUrl);
+
+            socket.onopen = () => {
+                statusDisplay.textContent = 'Verbunden';
+                sendButton.disabled = false; // Aktiviert den "Nachricht senden"-Button
+            };
+
+            socket.onclose = () => {
+                statusDisplay.textContent = 'Verbindung geschlossen';
+                sendButton.disabled = true;
+            };
+
+            socket.onerror = (error) => {
+                console.error('WebSocket Fehler:', error);
+                statusDisplay.textContent = 'Fehler bei der Verbindung';
+            };
+
+            socket.onmessage = (event) => {
+                // Zeige Nachrichten im Nachrichtenbereich an
+                const message = document.createElement('div');
+                message.textContent = `Server: ${event.data}`;
+                serverMessages.appendChild(message);
+
+                // Scroll automatisch nach unten
+                serverMessages.scrollTop = serverMessages.scrollHeight;
+                console.log('Nachricht vom Server:', event.data);
+            };
+        });
+
+        // Nachricht senden, wenn der Button gedrückt wird
+        sendButton.addEventListener('click', () => {
+            const message = inputData.value;
+            if (message && socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(message);
+
+                // Zeige gesendete Nachricht im Nachrichtenbereich
+                const messageDisplay = document.createElement('div');
+                messageDisplay.textContent = `Du: ${message}`;
+                messageDisplay.style.color = 'blue';
+                serverMessages.appendChild(messageDisplay);
+
+                // Scroll automatisch nach unten
+                serverMessages.scrollTop = serverMessages.scrollHeight;
+
+                inputData.value = ''; // Eingabefeld zurücksetzen
+                console.log('Nachricht gesendet:', message);
+            } else {
+                alert('Bitte stelle sicher, dass du verbunden bist und eine Nachricht eingegeben hast.');
+            }
+        });
+    </script>
+</body>
+</html>

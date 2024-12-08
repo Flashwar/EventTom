@@ -40,8 +40,10 @@ class Event(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     def get_tickets(self):
-        bought_tickets = self.tickets.filter(customer__isnull=False).count()
-        return self.max_tickets - bought_tickets
+        return 0 if (self.max_tickets - self.bought_tickets) >= 0 else self.max_tickets - self.bought_tickets
+
+    def set_tickets(self):
+        self.bought_tickets = self.tickets.filter(customer__isnull=False).count()
 
 class Coupon(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
