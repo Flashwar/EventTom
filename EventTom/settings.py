@@ -33,10 +33,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+ASGI_APPLICATION = "EventTom.asgi.application"
+
+CSRF_TRUSTED_ORIGINS=['*']
 
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -46,7 +50,7 @@ INSTALLED_APPS = [
     "backend.apps.BackendConfig",
     "rest_framework",
     "rest_framework_simplejwt",
-
+    "channels",
     # installed apps
     #"django_extensions",
 ]
