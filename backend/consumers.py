@@ -19,8 +19,8 @@ class AdminNotificationConsumer(AsyncJsonWebsocketConsumer):
     async def disconnect(self, close_code):
          await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
-    # # Receive  be ignored, because the channel direction is only unidirectional
-    # # Backend -> Frontend
+    # Receive be ignored, because the channel direction is only unidirectional
+    # Backend -> Frontend
     # async def receive(self, text_data):
     #
     #     text_data_json = json.loads(text_data)

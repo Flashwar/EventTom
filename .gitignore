@@ -229,3 +229,5 @@ out/
 # mpeltonen/sbt-idea plugin
 .idea/
 
+# Migrations
+./backend/migrations/
