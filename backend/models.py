@@ -7,8 +7,7 @@ from django.db import models
 
 class Employee(models.Model):
     staff_number = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-
+    person = models.OneToOneField(User, on_delete=models.CASCADE)
     class JobPosition(models.TextChoices):
         EVENTCREATOR = "EC", _("Eventcreator")
         EVENTMANGER = "EM", _("Eventmanager")

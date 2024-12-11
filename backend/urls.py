@@ -6,8 +6,9 @@ from backend.views import CouponUpdateView, CouponCreateView, CustomerDetailView
 
 urlpatterns = [
     path('websocketTest/', views.WebsocketTestView, name='websocket_test_view'),
-    path('event/get/', views.EventDetailView.as_view(), name='event_getEvent'),
-    path('event/', views.EventInfoView.as_view(), name='event_Event'),
+    path('event/getEvent/', views.EventDetailView.as_view(), name='get_one_event'),
+    path('manage/createEvent/', views.EventInfoView.as_view(), name='create_event'),
+    path('event/listAll/', views.EventInfoView.as_view(), name='get_all_events'),
     path('user/listCoupons/', views.CouponGetView.as_view(), name='coupon_get_view'),
     ## Coupon Testing
     path('user/coupon/<int:id>/', CouponUpdateView.as_view(), name='coupon-update'),

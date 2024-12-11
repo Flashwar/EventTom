@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from backend.Permissions import IsEventCreator
 from backend.serializers import EventSerializer, CouponSerializer, EmployeeSerializer, CustomerSerializer
 
 from backend.models import Event, Coupon, Employee
@@ -18,6 +19,7 @@ def WebsocketTestView(request):
 
 class EventInfoView(APIView):
     serializer_class = EventSerializer
+    permission_classes = [IsEventCreator]
 
     def create(self, request):
         # @TODO: Allow only EventManger to use this API Endpoint
