@@ -51,8 +51,8 @@ class EventConsumer(AsyncJsonWebsocketConsumer):
         )
         await self.accept()
 
-        events = list(Event.objects.all().order_by('-created_at').values())
-        await self.send(text_data=json.dumps({"type": "initial_data", "events": events}))
+        #events = list(Event.objects.all().order_by('-created_at').values())
+        #await self.send(text_data=json.dumps({"type": "initial_data", "events": events}))
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(

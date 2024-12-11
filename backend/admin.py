@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Employee
+from .models import Employee, Coupon
 
 
 class CustomUserAdmin(UserAdmin):
@@ -30,3 +30,4 @@ admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
 
 admin.site.register(Employee)
+admin.site.register(Coupon)

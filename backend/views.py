@@ -1,11 +1,14 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import render
-from rest_framework import viewsets, status, permissions
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import User
+from rest_framework import status, permissions
 from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, \
     ListCreateAPIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from backend.Permissions import IsEventCreator
 from backend.serializers import EventSerializer, CouponSerializer, EmployeeSerializer, CustomerSerializer
@@ -13,16 +16,11 @@ from backend.serializers import EventSerializer, CouponSerializer, EmployeeSeria
 from backend.models import Event, Coupon, Employee
 
 
-def WebsocketTestView(request):
-    return render(request, 'Test.html')
-
-
 class EventInfoView(APIView):
     serializer_class = EventSerializer
     permission_classes = [IsEventCreator]
 
     def create(self, request):
-        # @TODO: Allow only EventManger to use this API Endpoint
         serializer = EventSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -37,6 +35,8 @@ class EventListView(ListAPIView):
 
 class EventDetailView(APIView):
     serializer_class = EventSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         try:
@@ -51,6 +51,8 @@ class EventDetailView(APIView):
 
 class CouponGetView(APIView):
     serializer_class = CouponSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, ownerID):
         try:
@@ -62,30 +64,69 @@ class CouponGetView(APIView):
 
 ### TESTING COUPON APIS
 
-class CouponCreateView(CreateAPIView):
-    queryset = Coupon.objects.all()
-    serializer_class = CouponSerializer
-
-class CouponUpdateView(UpdateAPIView):
-    queryset = Coupon.objects.all()
-    serializer_class = CouponSerializer
-    lookup_field = 'id'
+# class CouponCreateView(CreateAPIView):
+#     authentication_classes = [JWTAuthentication]
+#     permission_classes = [IsAuthenticated]
+#     queryset = Coupon.objects.all()
+#     serializer_class = CouponSerializer
+#
+# class CouponUpdateView(UpdateAPIView):
+#     authentication_classes = [JWTAuthentication]
+#     permission_classes = [IsAuthenticated]
+#     queryset = Coupon.objects.all()
+#     serializer_class = CouponSerializer
+#     lookup_field = 'id'
 
 
 ###  Customer TESTING APIS
-class CustomerCreateView(ListCreateAPIView):
-    queryset = get_user_model().objects.all()
-    serializer_class = CustomerSerializer
-
-class CustomerDetailView(RetrieveUpdateDestroyAPIView):
-    queryset = get_user_model().objects.all()
-    serializer_class = CustomerSerializer
+# class CustomerCreateView(ListCreateAPIView):
+#     authentication_classes = [JWTAuthentication]
+#     permission_classes = [IsAuthenticated]
+#     queryset = get_user_model().objects.all()
+#     serializer_class = CustomerSerializer
+#
+# class CustomerDetailView(RetrieveUpdateDestroyAPIView):
+#     authentication_classes = [JWTAuthentication]
+#     permission_classes = [IsAuthenticated]
+#     queryset = get_user_model().objects.all()
+#     serializer_class = CustomerSerializer
 
 ###  EMPLOYEE TESTING APIS
-class EmployeeCreateView(CreateAPIView):
-    queryset = Employee.objects.all()
-    serializer_class = EmployeeSerializer
-    permission_classes = [permissions.IsAuthenticated]
+# class EmployeeCreateView(CreateAPIView):
+#     authentication_classes = [JWTAuthentication]
+#     permission_classes = [IsAuthenticated]
+#     queryset = Employee.objects.all()
+#     serializer_class = EmployeeSerializer
+#     permission_classes = [permissions.IsAuthenticated]
 
+
+## Login
+
+class LogoutView(APIView):
+    def post(self, request):
+        try:
+            refresh_token = request.data.get('refresh')
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"message": "successfully logged out"}, status=status.HTTP_200_OK)
+        except Exception as _:
+            return Response({"error": "Invalid Token"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RegisterView(APIView):
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        email = request.data.get('email')
+        firstname = request.data.get('firstname')
+        lastname = request.data.get('lastname')
+
+        if User.objects.filter(username=username).exists():
+            return Response({"error": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create a new user
+        User.objects.create(username=username,password=make_password(password),email=email,firstname=firstname,lastname=lastname)
+
+        return Response({"message": "User registered successfully"}, status=status.HTTP_201_CREATED)
 
 
