@@ -1,11 +1,12 @@
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.db import transaction
 from rest_framework import status, permissions
-from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, \
+from rest_framework.generics import  ListAPIView, RetrieveUpdateDestroyAPIView, \
     ListCreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -140,73 +141,57 @@ class TicketBookingView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
-        customer_id = request.data.get('customerID')
-        event_name = request.data.get('eventName')
-        num_tickets = request.data.get('numberTickets')
-        coupon_id = request.data.get('couponID')
+    def validate_request(self, data):
 
-        # Validation of fields
-        if not customer_id or not event_name or not num_tickets:
-            return Response(
-                {"error": "Missing required fields: customerID, eventName, and numberTickets"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # Validate request
+        required_fields = ['customerID', 'eventName', 'numberTickets']
+        missing_fields = [field for field in required_fields if not data.get(field)]
+
+        if missing_fields:
+            return {"error": f"Missing required fields: {', '.join(missing_fields)}"}
+
         try:
-            num_tickets = int(num_tickets)
+            num_tickets = int(data.get('numberTickets'))
             if num_tickets <= 0:
-                return Response({"error": "numberTickets must be a positive integer"},
-                                status=status.HTTP_400_BAD_REQUEST)
+                return {"error": "numberTickets must be a positive integer"}
         except ValueError:
-            return Response({"error": "numberTickets must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
+            return {"error": "numberTickets must be an integer"}
 
+        return None
+
+    def get_event(self, event_title):
+        # Get the event based on the title
         try:
-            # getting event
-            event = Event.objects.get(title=event_name)
+            return Event.objects.get(title=event_title)
         except Event.DoesNotExist:
-            return Response({"error": "No event with this name was found"}, status=status.HTTP_404_NOT_FOUND)
+            return None
 
-        # check if there is enough tickets
-        if event.max_tickets - event.bought_tickets < num_tickets:
-            return Response({"error": "Not enough tickets available"}, status=status.HTTP_409_CONFLICT)
-
-        # coupon accessing and setting the value
-        coupon_value = 0
-        if coupon_id:
-            try:
-                coupon = Coupon.objects.get(id=coupon_id)
-                if coupon.owner != customer_id:
-                    return Response({"error": "The coupon isn't owned by the user"},
-                                    status=status.HTTP_403_FORBIDDEN)
-                coupon_value = coupon.amount
-            except Coupon.DoesNotExist:
-                return Response({"error": "Coupon not found"}, status=status.HTTP_404_NOT_FOUND)
+    def get_coupon(self, coupon_id, customer_id):
+        # Get the coupon if the user
         try:
-            with transaction.atomic():
-                Ticket.objects.create(
-                    event=event,
-                    owner=customer_id,
-                    price=(event.base_price * num_tickets) - coupon_value,
-                )
-                # Update of the bought tickets
-                event.bought_tickets += num_tickets
-                event.save()
-        except Exception as e:
-            return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            coupon = Coupon.objects.get(id=coupon_id)
+            if coupon.owner != customer_id:
+                return None, {"error": "The coupon isn't owned by the user"}
+            return coupon, None
+        except Coupon.DoesNotExist:
+            return None, {"error": "Coupon not found"}
 
-        # messaging all user on the website via websocket
-
-        # update ticket count
+    def send_websocket_notifications(self, event, num_tickets):
+        # send update/notification via websocket
         channel_layer = get_channel_layer()
+
+        # Update for all user on the event site
         async_to_sync(channel_layer.group_send)(
             "SiteEvents",
             {
                 "type": "update_ticket_count",
-                "event_id": event.title,
+                "event": event.title,
                 "bought_tickets": event.bought_tickets,
-                "max_tickets": event.max_tickets,            }
+                "max_tickets": event.max_tickets,
+            }
         )
-        # update Admins
+
+        # Notifications for the EventManager
         async_to_sync(channel_layer.group_send)(
             "BuyingNotificationAdmin",
             {
@@ -214,5 +199,55 @@ class TicketBookingView(APIView):
                 "message": f"{num_tickets} Tickets for {event.title} have been booked!",
             }
         )
+
+    def post(self, request):
+        # validation of the input
+        validation_error = self.validate_request(request.data)
+        if validation_error:
+            return Response(validation_error, status=status.HTTP_400_BAD_REQUEST)
+
+        # accessing all elements of the body
+        customer_id = request.data.get('customerID')
+        event_title = request.data.get('eventName')
+        num_tickets = int(request.data.get('numberTickets'))
+        coupon_id = request.data.get('couponID')
+
+        # get event
+        event = self.get_event(event_title)
+        if not event:
+            return Response({"error": "No event with this name was found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # check if there is enough tickets
+        if event.max_tickets - event.bought_tickets < num_tickets:
+            return Response({"error": "Not enough tickets available"}, status=status.HTTP_409_CONFLICT)
+
+        # coupon validation
+        coupon_value = 0
+        coupon = None
+        if coupon_id:
+            coupon, coupon_error = self.get_coupon(coupon_id, customer_id)
+            if coupon_error:
+                return Response(coupon_error, status=status.HTTP_403_FORBIDDEN)
+            coupon_value = coupon.amount
+
+        # ticket buying
+        try:
+            with transaction.atomic():
+                Ticket.objects.create(
+                    event=event,
+                    owner=customer_id,
+                    price=(event.base_price * num_tickets) - coupon_value,
+                )
+                event.bought_tickets += num_tickets
+                event.save()
+        except Exception as e:
+            return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # WebSocket-Notification
+        self.send_websocket_notifications(event, num_tickets)
+
+        # delete coupon when not in debug mode
+        if coupon and not settings.DEBUG:
+            coupon.delete()
 
         return Response({"message": "Tickets successfully booked"}, status=status.HTTP_201_CREATED)
