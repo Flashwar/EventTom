@@ -34,8 +34,9 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 ASGI_APPLICATION = "EventTom.asgi.application"
+WSGI_APPLICATION = "EventTom.wsgi.application"
 
-CSRF_TRUSTED_ORIGINS=['*']
+CSRF_TRUSTED_ORIGINS=[os.getenv("WEBSERVER_IP")]
 
 # Application definition
 
@@ -50,8 +51,10 @@ INSTALLED_APPS = [
     "backend.apps.BackendConfig",
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "channels",
-    # installed apps
+
+    # ER Modeling
     #"django_extensions",
 ]
 
@@ -70,6 +73,8 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(days=30),
     'SLIDING_TOKEN_REFRESH_LIFETIME_LATE_USER': timedelta(days=1),
     'SLIDING_TOKEN_LIFETIME_LATE_USER': timedelta(days=30),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
 }
 
 MIDDLEWARE = [
@@ -101,8 +106,6 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "EventTom.wsgi.application"
-
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -118,6 +121,16 @@ DATABASES = {
         'PORT': 5432,
     }
 }
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [(os.getenv("REDIS_SERVERIP"), 6379)],
+        },
+    },
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

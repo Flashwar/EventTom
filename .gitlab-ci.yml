@@ -1,0 +1,108 @@
+stages:
+  - test
+  - lint
+  - migrations
+  - deploy
+  - flutter-test
+  - flutter-build
+
+default:
+  cache:
+    paths:
+      - ~/.cache/pip/
+      - .cache/pypoetry
+      - .pub-cache/
+  before_script:
+    - apt-get -y update && apt-get -y install apt-utils
+    - apt-get -y upgrade
+
+# Backend Jobs
+Unit Tests:
+  stage: test
+  image: python:3.11
+  before_script:
+    - pip install poetry "psycopg[binary]"
+    - poetry config virtualenvs.create false
+    - poetry install --no-root
+  script:
+    - poetry run pytest
+  artifacts:
+    name: "test-results"
+    when: always
+    expire_in: 1 week
+    paths:
+      - reports/
+    reports:
+      junit: reports/junit.xml
+  only:
+    - backend
+
+Python Code Lint:
+  stage: lint
+  image: python:3.11
+  before_script:
+    - pip install poetry
+    - poetry config virtualenvs.create false
+    - poetry install --no-root
+  script:
+    - poetry run black --check .
+    - poetry run isort --check-only .
+    - poetry run flake8 .
+  only:
+    - backend
+
+Migrations Check:
+  stage: migrations
+  image: python:3.11
+  before_script:
+    - pip install poetry "psycopg[binary]"
+    - poetry config virtualenvs.create false
+    - poetry install --no-root
+  script:
+    - python manage.py makemigrations --check --dry-run
+    - python manage.py migrate --plan
+    - python manage.py check
+  only:
+    - backend
+
+Deploy to Azure:
+  stage: deploy
+  image: mcr.microsoft.com/azure-cli:latest
+  script:
+    - az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
+    - echo "Deploying application to Azure Web App..."
+    - az webapp up --name $AZURE_WEBAPP_NAME --resource-group $AZURE_RESOURCE_GROUP --runtime "PYTHON:3.11"
+  only:
+    - backend
+
+# Flutter Jobs
+Flutter Test:
+  stage: flutter-test
+  image: cirrusci/flutter:stable
+  before_script:
+    - flutter pub get
+  script:
+    - flutter test
+  artifacts:
+    name: "flutter-test-results"
+    when: always
+    expire_in: 1 week
+    paths:
+      - coverage/
+  only:
+    - frontend
+
+Flutter Build:
+  stage: flutter-build
+  image: cirrusci/flutter:stable
+  before_script:
+    - flutter pub get
+  script:
+    - flutter build web
+  artifacts:
+    name: "flutter-build-artifacts"
+    expire_in: 1 week
+    paths:
+      - build/web/
+  only:
+    - frontend

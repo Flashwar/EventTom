@@ -23,7 +23,13 @@ Follow the steps below to set up the backend locally:
     pip install -r requirements.txt
 
 ## Debugging
-   
+
+Set up a local Redis DB:
+```bash
+   docker run -d --rm -p 6379:6379 redis:7
+   ```
+
+
 Start the Django Server: Run the development server:
    ```bash
       python manage.py runserver
