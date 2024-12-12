@@ -10,7 +10,7 @@ class IsEventCreator(BasePermission):
             return False
 
         employee = getattr(request.user, 'employee', None)
-        if not employee or employee.role == 'EventManager':
+        if not employee or employee.position == 'EventManager':
             return False
 
 

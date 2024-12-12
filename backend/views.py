@@ -1,13 +1,13 @@
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.db import transaction
-from rest_framework import status, permissions
-from rest_framework.generics import  ListAPIView, RetrieveUpdateDestroyAPIView, \
-    ListCreateAPIView
+from django.shortcuts import render
+from django.utils.timezone import now
+from rest_framework import status
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,20 +15,38 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from backend.Permissions import IsEventCreator
-from backend.serializers import EventSerializer, CouponSerializer, EmployeeSerializer, CustomerSerializer
+from backend.serializers import EventSerializer, CouponSerializer, EmployeeSerializer, CustomerSerializer, \
+    TicketTypSerializer
 
-from backend.models import Event, Coupon, Employee, Ticket
+from backend.models import Event, Coupon, Employee, Ticket,TicketTyp
 
+# def WebsocketTestView(request):
+#     return render(request, 'Test.html')
 
 class EventInfoView(APIView):
     serializer_class = EventSerializer
     permission_classes = [IsEventCreator]
 
-    def create(self, request):
+    def post(self, request):
         serializer = EventSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            event = serializer.save()
+
+            # send update/notification via websocket
+            channel_layer = get_channel_layer()
+
+            # Update for all user on the event site
+            async_to_sync(channel_layer.group_send)(
+                "SiteEvents",
+                {
+                    "type": "update_ticket_count",
+                    "event": event.title,
+                    "bought_tickets": event.bought_tickets,
+                    "max_tickets": event.max_tickets,
+                }
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -45,7 +63,7 @@ class EventDetailView(APIView):
 
     def get(self, request):
         try:
-            event = Event.objects.filter(id=request.data['title'])
+            event = Event.objects.filter(title= request.data['title'])
             serializer = EventSerializer(event, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Event.DoesNotExist:
@@ -59,52 +77,13 @@ class CouponGetView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, ownerID):
+    def get(self, request):
         try:
-            coupon = Coupon.objects.filter(owner_id=ownerID)
+            coupon = Coupon.objects.filter(owner_id= request.data['ownerID'])
             serializer = CouponSerializer(coupon, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Coupon.DoesNotExist:
             return Response({"error": "There were no coupons for this user"}, status=status.HTTP_404_NOT_FOUND)
-
-
-### TESTING COUPON APIS
-
-# class CouponCreateView(CreateAPIView):
-#     authentication_classes = [JWTAuthentication]
-#     permission_classes = [IsAuthenticated]
-#     queryset = Coupon.objects.all()
-#     serializer_class = CouponSerializer
-#
-# class CouponUpdateView(UpdateAPIView):
-#     authentication_classes = [JWTAuthentication]
-#     permission_classes = [IsAuthenticated]
-#     queryset = Coupon.objects.all()
-#     serializer_class = CouponSerializer
-#     lookup_field = 'id'
-
-
-###  Customer TESTING APIS
-# class CustomerCreateView(ListCreateAPIView):
-#     authentication_classes = [JWTAuthentication]
-#     permission_classes = [IsAuthenticated]
-#     queryset = get_user_model().objects.all()
-#     serializer_class = CustomerSerializer
-#
-# class CustomerDetailView(RetrieveUpdateDestroyAPIView):
-#     authentication_classes = [JWTAuthentication]
-#     permission_classes = [IsAuthenticated]
-#     queryset = get_user_model().objects.all()
-#     serializer_class = CustomerSerializer
-
-###  EMPLOYEE TESTING APIS
-# class EmployeeCreateView(CreateAPIView):
-#     authentication_classes = [JWTAuthentication]
-#     permission_classes = [IsAuthenticated]
-#     queryset = Employee.objects.all()
-#     serializer_class = EmployeeSerializer
-#     permission_classes = [permissions.IsAuthenticated]
-
 
 ## Login
 
@@ -144,7 +123,7 @@ class TicketBookingView(APIView):
     def validate_request(self, data):
 
         # Validate request
-        required_fields = ['customerID', 'eventName', 'numberTickets']
+        required_fields = ['customerID', 'eventName', 'numberTickets', 'ticketTyp']
         missing_fields = [field for field in required_fields if not data.get(field)]
 
         if missing_fields:
@@ -170,11 +149,24 @@ class TicketBookingView(APIView):
         # Get the coupon if the user
         try:
             coupon = Coupon.objects.get(id=coupon_id)
-            if coupon.owner != customer_id:
+            if str(coupon.owner) != str(self.get_user(customer_id).username):
                 return None, {"error": "The coupon isn't owned by the user"}
             return coupon, None
         except Coupon.DoesNotExist:
             return None, {"error": "Coupon not found"}
+
+    def get_tickettyp(self, tickettypname):
+        try:
+            return TicketTyp.objects.get(name=tickettypname)
+        except TicketTyp.DoesNotExist:
+            return None
+
+    def get_user(self, ownerid):
+        # Get the coupon if the user
+        try:
+            return User.objects.get(id=ownerid)
+        except User.DoesNotExist:
+            return None
 
     def send_websocket_notifications(self, event, num_tickets):
         # send update/notification via websocket
@@ -211,14 +203,25 @@ class TicketBookingView(APIView):
         event_title = request.data.get('eventName')
         num_tickets = int(request.data.get('numberTickets'))
         coupon_id = request.data.get('couponID')
+        ticket_typ = request.data.get('ticketTyp')
 
         # get event
-        event = self.get_event(event_title)
-        if not event:
+        events = self.get_event(event_title)
+        if not events:
             return Response({"error": "No event with this name was found"}, status=status.HTTP_404_NOT_FOUND)
 
+        # get user
+        customers = self.get_user(customer_id)
+        if not customers:
+            return Response({"error": "No customer with this id was found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # get tickettyp
+        tickettyp = self.get_tickettyp(ticket_typ)
+        if not tickettyp:
+            return Response({"error": "No ticket type with this name was found"}, status=status.HTTP_404_NOT_FOUND)
+
         # check if there is enough tickets
-        if event.max_tickets - event.bought_tickets < num_tickets:
+        if events.max_tickets - events.bought_tickets < num_tickets:
             return Response({"error": "Not enough tickets available"}, status=status.HTTP_409_CONFLICT)
 
         # coupon validation
@@ -234,20 +237,58 @@ class TicketBookingView(APIView):
         try:
             with transaction.atomic():
                 Ticket.objects.create(
-                    event=event,
-                    owner=customer_id,
-                    price=(event.base_price * num_tickets) - coupon_value,
+                    owner=customers,
+                    ticket_typ=tickettyp,
+                    event=events,
+                    price=((events.base_price + (events.base_price * tickettyp.fee)) * num_tickets) - coupon_value
                 )
-                event.bought_tickets += num_tickets
-                event.save()
+
+                # Update event's bought tickets
+                events.bought_tickets += num_tickets
+                events.save()
+
         except Exception as e:
             return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # WebSocket-Notification
-        self.send_websocket_notifications(event, num_tickets)
+        self.send_websocket_notifications(events, num_tickets)
 
         # delete coupon when not in debug mode
         if coupon and not settings.DEBUG:
             coupon.delete()
 
         return Response({"message": "Tickets successfully booked"}, status=status.HTTP_201_CREATED)
+
+### GET IDs
+
+## get the ID of the user which the user with the username have
+class GetUserIdView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            user = User.objects.get(username= request.data['username'])
+            return Response({"user_id": user.id}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class GetUserIdFromEmployeeUUID(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        try:
+            # get employee with the staff_number
+            employee = Employee.objects.get(staff_number= request.data['staff_number'])
+
+            # get the user from the employee
+            user = employee.person
+            # return employee id
+            return Response({"user_id": user.id}, status=status.HTTP_200_OK)
+        except Employee.DoesNotExist:
+            return Response({"error": "Employee not found for the given UUID"}, status=status.HTTP_404_NOT_FOUND)
+
+## TicketType
+class TicketTypListView(ListAPIView):
+    serializer_class = TicketTypSerializer
+    queryset = TicketTyp.objects.all()
+    permission_classes = [AllowAny]

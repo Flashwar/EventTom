@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Employee, Coupon, Ticket, Event
+from .models import Employee, Coupon, Ticket, Event, TicketTyp
 
 
 class CustomUserAdmin(UserAdmin):
@@ -33,3 +33,4 @@ admin.site.register(Employee)
 admin.site.register(Coupon)
 admin.site.register(Ticket)
 admin.site.register(Event)
+admin.site.register(TicketTyp)

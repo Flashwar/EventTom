@@ -1,12 +1,12 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from backend.models import Event, Coupon, Employee
+from backend.models import Event, Coupon, Employee, TicketTyp, Ticket
 
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
-        fields = ['title', 'max_tickets', 'bought_tickets', 'threshold_tickets', 'base_price','creator']
+        fields = '__all__'
 
 class CouponSerializer(serializers.ModelSerializer):
     class Meta:
@@ -24,3 +24,12 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'permissions']
 
+class TicketTypSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TicketTyp
+        fields = '__all__'
+
+class TicketSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        fields = ['event', 'owner', 'ticket_typ', 'bought_time', 'price']
