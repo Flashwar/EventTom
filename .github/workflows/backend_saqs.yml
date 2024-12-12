@@ -32,6 +32,14 @@ jobs:
           pip install "psycopg[binary]"
           sudo apt install libpq5 
 
+      - name: Docker install
+        run: |
+          sudo apt install apt-transport-https ca-certificates curl software-properties-common -y
+          curl -fsSL https://get.docker.com -o get-docker.sh
+          sudo sh get-docker.sh
+          sudo systemctl start docker
+          sudo systemctl enable docker
+
       - name: Create and start virtual environment
         run: |
           python -m venv venv
