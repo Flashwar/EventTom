@@ -36,7 +36,7 @@ ALLOWED_HOSTS = ['*']
 ASGI_APPLICATION = "EventTom.asgi.application"
 WSGI_APPLICATION = "EventTom.wsgi.application"
 
-CSRF_TRUSTED_ORIGINS=[os.getenv("WEBSERVER_IP")]
+CSRF_TRUSTED_ORIGINS=[os.getenv("WEBSITE_HOSTNAME")]
 
 # Application definition
 
