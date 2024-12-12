@@ -137,6 +137,9 @@ class RegisterView(APIView):
 
 
 class TicketBookingView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         customer_id = request.data.get('customerID')
         event_name = request.data.get('eventName')

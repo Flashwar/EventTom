@@ -19,7 +19,8 @@ urlpatterns = [
     path('event/getEvent/', views.EventDetailView.as_view(), name='get_one_event'),
     path('manage/createEvent/', views.EventInfoView.as_view(), name='create_event'),
     path('event/listAll/', views.EventInfoView.as_view(), name='get_all_events'),
-    path('user/listCoupons/', views.CouponGetView.as_view(), name='coupon_get_view'),
+    path('user/listCoupons/', views.CouponGetView.as_view(), name='get_coupons'),
+    path('user/buyTicket/', views.TicketBookingView.as_view(), name='ticket_booking'),
     ## Coupon Testing
     #path('user/coupon/<int:id>/', CouponUpdateView.as_view(), name='coupon-update'),
     #path('user/coupon/', CouponCreateView.as_view(), name='coupon-create'),
