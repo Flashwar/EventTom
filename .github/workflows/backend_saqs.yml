@@ -16,6 +16,8 @@ jobs:
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      WEBSERVER_IP: ${{ secrets.WEBSERVER_IP }}
+      REDIS_SERVERIP: ${{ secrets.REDIS_SERVERIP }}
     steps:
       - uses: actions/checkout@v4
 

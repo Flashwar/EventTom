@@ -1,11 +1,6 @@
 import json
 
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
-from channels.layers import get_channel_layer
-from django.http import JsonResponse
-from keyring.backends.libsecret import available
-
-from backend.models import Event
 
 
 class AdminNotificationConsumer(AsyncJsonWebsocketConsumer):
