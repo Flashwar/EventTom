@@ -177,7 +177,7 @@ class TicketBookingView(APIView):
             "SiteEvents",
             {
                 "type": "update_ticket_count",
-                "event": event.title,
+                "event_title": event.title,
                 "bought_tickets": event.bought_tickets,
                 "max_tickets": event.max_tickets,
             }
