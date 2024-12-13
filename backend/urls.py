@@ -1,3 +1,4 @@
+from django.shortcuts import render
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 from backend.views import LogoutView, EventInfoView, EventDetailView, EventListView, CouponGetView, TicketBookingView, \
@@ -25,5 +26,8 @@ urlpatterns = [
          name='get-user-id-from-employee'),
     # Get all TicketTyps
     path('event/listTicketTyp/', TicketTypListView.as_view(), name='list_ticket_type'),
+
+    ###### Testing WS ####
+    path('test/', lambda request: render(request, 'TestWebsockets.html')),
 
 ]

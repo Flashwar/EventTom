@@ -58,11 +58,13 @@ class EventConsumer(AsyncJsonWebsocketConsumer):
     async def send_event(self, event):
         await self.send(text_data=json.dumps({
             "type": "new_event",
-            "event_id": event["title"],
+        "message": {
+            "title": event["event_title"],
             "bought_tickets": event["bought_tickets"],
             "max_tickets": event["max_tickets"],
             "base_price": event["base_price"],
-            "ticket_typ": event["ticket_typ"]
+            "ticket_typ": event["ticket_typ"],
+            }
         }))
 
 
@@ -70,7 +72,9 @@ class EventConsumer(AsyncJsonWebsocketConsumer):
 
         await self.send(text_data=json.dumps({
             "type": "update_ticket_count",
-            "event_id": event["title"],
+            "message": {
+            "title": event["event_title"],
             "bought_tickets": event["bought_tickets"],
             "max_tickets": event["max_tickets"]
+            }
         }))

@@ -18,7 +18,7 @@ class Event(models.Model):
     title = models.CharField(max_length=100, unique=True, primary_key=True)
     max_tickets = models.IntegerField()
     bought_tickets = models.IntegerField(default=0, blank=True)
-    date = models.DateField(default=now, blank=True)
+    date = models.DateTimeField(default=now, blank=True)
     threshold_tickets = models.IntegerField(default=0, blank=True)
     base_price = models.DecimalField(max_digits=10, decimal_places=2)
     created = models.DateTimeField(auto_now_add=True)
