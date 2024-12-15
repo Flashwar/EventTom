@@ -168,7 +168,7 @@ class TicketBookingView(APIView):
             coupon = Coupon.objects.get(id=coupon_id)
             # check if the owner of the coupon is the customer who is buying tickets rn
             if str(coupon.owner) != str(self.get_user(customer_id).username):
-                # return error
+                # return error if the user is not the right one
                 return None, {"error": "The coupon isn't owned by the user"}
             # if valid and the rightful owner, return coupon and no error -> none
             return coupon, None
@@ -176,7 +176,7 @@ class TicketBookingView(APIView):
             # if the ticket is not valid return error
             return None, {"error": "Coupon not found"}
 
-    # Get the tickettyp instace with ticketname
+    # Get the tickettyp instance with ticket name
     def get_tickettyp(self, tickettypname):
         try:
             return TicketTyp.objects.get(name=tickettypname)
@@ -266,6 +266,7 @@ class TicketBookingView(APIView):
                     owner=customers,
                     ticket_typ=tickettyp,
                     event=events,
+                    numb_tickets=num_tickets,
                     price=((events.base_price + (events.base_price * tickettyp.fee)) * num_tickets) - coupon_value
                 )
 

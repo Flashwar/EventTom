@@ -52,9 +52,6 @@ class Coupon(models.Model):
     # Link to the owner of the personalized coupon
     owner = models.OneToOneField(User, on_delete=models.CASCADE, related_name='coupon')
 
-    # Status is the ticket was already been emptied
-    depleted = models.BooleanField(default=False)
-
 
 class TicketTyp(models.Model):
     # Unique name of the Tickettyp, e.g.: luxus, premium
@@ -81,5 +78,4 @@ class Ticket(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     # number of tickets bought
-    # @TODO Add
-    # numb_tickets = models.IntegerField(default=0)
+    numb_tickets = models.IntegerField(default=0)
