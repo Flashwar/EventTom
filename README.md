@@ -27,7 +27,7 @@ Das Projekt umfasst eine Eventmanagement-Webseite, die es Nutzern ermöglicht, T
 
 ## Installation
 
-## Getting started
+Das Projekt umfasst eine Eventmanagement-Webseite, die es Nutzern ermöglicht, Tickets für verschiedene Events zu kaufen und dabei personalisierte Coupons zu erhalten. Darüber hinaus gibt es unterschiedliche Rollen, die verschiedene Funktionen innerhalb der Webseite haben:
 
 Follow the steps below to set up the backend locally:
 
