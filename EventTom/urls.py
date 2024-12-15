@@ -20,8 +20,15 @@ from django.urls import path, include
 
 from EventTom import settings
 
+#
 urlpatterns = [
+    # Endpoint for the Admin interface
     path("admin/", admin.site.urls),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+
+    # Authentication endpoints provided by Django REST Framework
+    # @TODO maybe need to be deleted
+    #path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+
+    # Include API routes defined in the 'backend' app
     path('api/', include('backend.urls')),
 ]  + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

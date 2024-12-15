@@ -32,11 +32,11 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS=[f"https://{os.getenv("WEBSITE_HOSTNAME")}"]
 
+# path of the webserver
 ASGI_APPLICATION = "EventTom.asgi.application"
 WSGI_APPLICATION = "EventTom.wsgi.application"
-
-CSRF_TRUSTED_ORIGINS=[f"https://{os.getenv("WEBSITE_HOSTNAME")}"]
 
 # Application definition
 
@@ -66,7 +66,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
-
+# JWT configuration
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
@@ -121,7 +121,7 @@ DATABASES = {
         'PORT': 5432,
     }
 }
-
+# REDIS connection for the WS
 # CHANNEL_LAYERS = {
 #     'default': {
 #         'BACKEND': 'channels_redis.core.RedisChannelLayer',
