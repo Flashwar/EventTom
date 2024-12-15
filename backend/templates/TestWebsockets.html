@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket Count WebSocket Receiver</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #status {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .connected { background-color: #dff0d8; color: #3c763d; }
+        .disconnected { background-color: #f2dede; color: #a94442; }
+        .connecting { background-color: #fcf8e3; color: #8a6d3b; }
+        #messages {
+            border: 1px solid #ddd;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .ticket-info {
+            margin: 5px 0;
+            padding: 10px;
+            background-color: #f4f4f4;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ticket Count WebSocket Receiver</h1>
+
+    <div id="status" class="disconnected">Status: Nicht verbunden</div>
+    <div id="messages"></div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const messagesDiv = document.getElementById('messages');
+        let socket = null;
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT_ATTEMPTS = 5;
+
+        function setStatus(status, message) {
+            statusDiv.textContent = `Status: ${message}`;
+            statusDiv.className = status;
+        }
+
+        function connectWebSocket() {
+            const socketUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//` +
+                              `${window.location.host}/ws/event/update/`;
+
+            socket = new WebSocket(socketUrl);
+
+            setStatus('connecting', 'Verbindung wird hergestellt...');
+
+            socket.onopen = function() {
+                setStatus('connected', 'Verbunden');
+                reconnectAttempts = 0;
+            };
+
+            socket.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('Empfangene Daten:', data);
+
+                    // Überprüfen, ob es eine Ticket-Count-Aktualisierung ist
+                    if (data.type === 'update_ticket_count') {
+                        const message = data.message;
+                        const messageElement = document.createElement('div');
+                        messageElement.classList.add('ticket-info');
+
+                        messageElement.innerHTML = `
+                            <strong>Titel:</strong> ${message.title}<br>
+                            <strong>Gekaufte Tickets:</strong> ${message.bought_tickets}<br>
+                            <strong>Max. Tickets:</strong> ${message.max_tickets}
+                        `;
+
+                        messagesDiv.appendChild(messageElement);
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    }
+                } catch (error) {
+                    console.error('Fehler beim Verarbeiten der Nachricht:', error);
+
+                    const errorElement = document.createElement('p');
+                    errorElement.textContent = `Fehler: ${error.message}`;
+                    errorElement.style.color = 'red';
+                    messagesDiv.appendChild(errorElement);
+                }
+            };
+
+            socket.onclose = function(event) {
+                if (event.wasClean) {
+                    setStatus('disconnected', 'Verbindung sauber geschlossen');
+                } else {
+                    handleReconnect();
+                }
+            };
+
+            socket.onerror = function(error) {
+                console.error('WebSocket Fehler:', error);
+                setStatus('disconnected', 'Verbindungsfehler');
+                handleReconnect();
+            };
+        }
+
+        function handleReconnect() {
+            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                reconnectAttempts++;
+                const delay = Math.pow(2, reconnectAttempts) * 1000;
+
+                setStatus('disconnected', `Verbindung unterbrochen. Versuche Wiederverbindung (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`);
+
+                setTimeout(connectWebSocket, delay);
+            } else {
+                setStatus('disconnected', 'Keine Wiederverbindung möglich. Bitte Seite neu laden.');
+            }
+        }
+
+        // WebSocket beim Laden der Seite verbinden
+        connectWebSocket();
+    </script>
+</body>
+</html>
