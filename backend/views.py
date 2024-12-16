@@ -13,7 +13,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from backend.models import Event, Coupon, Employee, Ticket, TicketTyp
-from backend.Permissions import IsEventCreator
+from backend.permissions import IsEventCreator
 from backend.serializers import EventSerializer, CouponSerializer, TicketTypSerializer
 
 # EventInfoView allows creating a new event
