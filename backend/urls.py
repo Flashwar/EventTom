@@ -3,7 +3,7 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 
 from backend.views import LogoutView, EventInfoView, EventDetailView, EventListView, CouponGetView, TicketBookingView, \
-    GetUserIdView, GetUserIdFromEmployeeUUID, TicketTypListView
+    GetUserIdView, GetUserIdFromEmployeeUUID, TicketTypListView, RegisterView
 
 # Define the RESTAPI URLs for various endpoints
 urlpatterns = [
@@ -18,6 +18,9 @@ urlpatterns = [
 
     # Endpoint for logging of a user or customer
     path('logout/', LogoutView.as_view(), name='logout'),
+
+    # Endpoint for creating a user
+    path('createUser/', RegisterView.as_view(), name='create_user'),
 
     # Endpoint to get specific information about an event
     path('event/getEvent/', EventDetailView.as_view(), name='get_one_event'),
