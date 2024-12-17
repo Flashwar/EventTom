@@ -86,13 +86,13 @@ class UserService:
 # Singleton class for managing employee-related operations
 @singleton
 class EmployeeService:
-    # Retrieves an employee by their unique staff number
-    def get_employee(self, staff_number: str):
+    # Retrieve an employee by the user id
+    def get_employee_by_user(self, user):
         try:
             # Query for the employee
-            return Employee.objects.get(staff_number=staff_number)
+            return Employee.objects.get(person=user)
         except Employee.DoesNotExist:
-            # Return None if no employee with the given staff number exists
+            # Return None if no employee for this user exists
             return None
 
 

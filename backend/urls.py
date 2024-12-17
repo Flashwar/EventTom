@@ -3,7 +3,7 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 
 from backend.views import LogoutView, EventInfoView, EventDetailView, EventListView, CouponGetView, TicketBookingView, \
-    GetUserIdView, GetUserIdFromEmployeeUUID, TicketTypListView, RegisterView
+    GetUserIdView, TicketTypListView, RegisterView, GetEmployeePositionView
 
 # Define the RESTAPI URLs for various endpoints
 urlpatterns = [
@@ -21,6 +21,9 @@ urlpatterns = [
 
     # Endpoint for creating a user
     path('createUser/', RegisterView.as_view(), name='create_user'),
+
+    # Endpoint for getting the job position
+    path('user/getEmployeePosition/', GetEmployeePositionView.as_view(), name='check_employee_status'),
 
     # Endpoint to get specific information about an event
     path('event/getEvent/', EventDetailView.as_view(), name='get_one_event'),
@@ -40,14 +43,10 @@ urlpatterns = [
     # Endpoint to retrieve a user's ID from their username
     path('user/getUserId/', GetUserIdView.as_view(), name='get-user-id'),
 
-    # Endpoint to retrieve a user's ID from their staff UUID
-    path('user/getUserIdFromStaffnumber/', GetUserIdFromEmployeeUUID.as_view(),
-         name='get-user-id-from-employee'),
-
     # Endpoint to get a list of all available TicketTyps
     path('event/listTicketTyp/', TicketTypListView.as_view(), name='list_ticket_type'),
 
-    # @todo: Temporary testing endpoint for WebSocket functionality (to be removed later)
+    # Temporary testing endpoint for WebSocket functionality (to be removed later)
     path('test/', lambda request: render(request, 'TestWebsockets.html')),
 
 ]

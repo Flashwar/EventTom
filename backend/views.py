@@ -254,6 +254,7 @@ class TicketBookingView(APIView):
 
 ## get the ID of the user which the user with the username have
 class GetUserIdView(APIView):
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     @inject
@@ -271,25 +272,35 @@ class GetUserIdView(APIView):
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
-# Get user ID by employee's staff number (UUID)
-class GetUserIdFromEmployeeUUID(APIView):
+class GetEmployeePositionView(APIView):
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     @inject
-    def __init__(self, employee_service: EmployeeService):
+    def __init__(self, user_service: UserService, employee_service: EmployeeService):
+        self.user_service = user_service
         self.employee_service = employee_service
 
     def get(self, request):
-        # get employee with the staff_number
-        employee = self.employee_service.get_employee(request.data['staff_number'])
+        # Extract the user ID from the request body
+        user_id = request.data.get('userid')
 
-        if employee is not None:
-            # get the user from the employee
-            user = employee.person
-            # return employee id
-            return Response({"user_id": user.id}, status=status.HTTP_200_OK)
-        # if user is None return 404
-        return Response({"error": "Employee not found for the given UUID"}, status=status.HTTP_404_NOT_FOUND)
+        # Validate if "userid" exists in the request
+        if not user_id:
+            return Response({"error": "userid is required in the request body"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get the user instance based on the provided ID
+        user = self.user_service.get_user_by_id(user_id)
+        if not user:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if the user is associated with an Employee
+        employee = self.employee_service.get_employee_by_user(user)
+        if not employee:
+            return Response({"jobPosition": "NO"}, status=status.HTTP_200_OK)
+
+        # If the user is an Employee, return their JobPosition
+        return Response({"jobPosition": employee.position}, status=status.HTTP_200_OK)
 
 
 ## TicketType
