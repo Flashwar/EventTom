@@ -73,7 +73,7 @@ class EventDetailView(APIView):
     def __init__(self, event_service: EventService):
         self.event_service = event_service
 
-    def get(self, request):
+    def post(self, request):
         # Search for an event with the given title
         event = self.event_service.get_event_by_title(request.data['title'])
         # if not found return error 404
@@ -96,7 +96,7 @@ class CouponGetView(APIView):
     def __init__(self, coupon_service: CouponService):
         self.coupon_service = coupon_service
 
-    def get(self, request):
+    def post(self, request):
         # Search for all coupons where the owner_id matches the provided ownerid
         coupon = self.coupon_service.get_coupons_by_owner(request.data['ownerID'])
         # if the customer doesn't have coupons return 404
@@ -261,7 +261,7 @@ class GetUserIdView(APIView):
     def __init__(self, user_service: UserService):
         self.user_service = user_service
 
-    def get(self, request):
+    def post(self, request):
         # get the user instance with the given parameter username
         user = self.user_service.get_user_by_username(request.data['username'])
 
@@ -281,7 +281,7 @@ class GetEmployeePositionView(APIView):
         self.user_service = user_service
         self.employee_service = employee_service
 
-    def get(self, request):
+    def post(self, request):
         # Extract the user ID from the request body
         user_id = request.data.get('userid')
 
