@@ -26,7 +26,7 @@ Das Projekt umfasst eine Eventmanagement-Webseite, die es Nutzern ermöglicht, T
 - **Websockets**: Für Echtzeit-Kommunikation
 - **Datenbank**: PostgreSQL (DBMS)
 - **Redis**: Wird für Websockets (Channels) verwendet, um Echtzeit-Benachrichtigungen zu ermöglichen
-- **Pattern**: Dependency Injection für die Verwaltung von Abhängigkeiten
+- **Pattern**: Dependency Injection, Observer, Decorator und Singelton
 
 ## Installation
 
