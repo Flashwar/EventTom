@@ -32,7 +32,5 @@ jobs:
           poetry install --no-root
 
       - name: Run tests
-        env:
-          DJANGO_SETTINGS_MODULE: backend.settings
         run: |
           poetry run python manage.py test backend.tests
