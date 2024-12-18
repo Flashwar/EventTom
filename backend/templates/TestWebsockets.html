@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Ticket Count WebSocket Receiver</title>
+    <title>WebSocket Receiver</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -18,13 +18,14 @@
         .connected { background-color: #dff0d8; color: #3c763d; }
         .disconnected { background-color: #f2dede; color: #a94442; }
         .connecting { background-color: #fcf8e3; color: #8a6d3b; }
-        #messages {
+        #messages, #admin-notifications {
             border: 1px solid #ddd;
             padding: 10px;
             max-height: 300px;
             overflow-y: auto;
+            margin-bottom: 20px;
         }
-        .ticket-info {
+        .ticket-info, .notification {
             margin: 5px 0;
             padding: 10px;
             background-color: #f4f4f4;
@@ -33,96 +34,116 @@
     </style>
 </head>
 <body>
-    <h1>Ticket Count WebSocket Receiver</h1>
+    <h1>WebSocket Receiver</h1>
 
     <div id="status" class="disconnected">Status: Nicht verbunden</div>
+
+    <h2>Ticket-Updates</h2>
     <div id="messages"></div>
+
+    <h2>Admin-Benachrichtigungen</h2>
+    <div id="admin-notifications"></div>
 
     <script>
         const statusDiv = document.getElementById('status');
         const messagesDiv = document.getElementById('messages');
-        let socket = null;
-        let reconnectAttempts = 0;
-        const MAX_RECONNECT_ATTEMPTS = 5;
+        const adminNotificationsDiv = document.getElementById('admin-notifications');
+
+        let eventSocket = null;
+        let notificationSocket = null;
 
         function setStatus(status, message) {
             statusDiv.textContent = `Status: ${message}`;
             statusDiv.className = status;
         }
 
-        function connectWebSocket() {
-            const socketUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//` +
-                              `${window.location.host}/ws/event/update/`;
+        function connectWebSocket(url, type) {
+            const fullUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//` +
+                            `${window.location.host}${url}`;
+            const socket = new WebSocket(fullUrl);
 
-            socket = new WebSocket(socketUrl);
-
-            setStatus('connecting', 'Verbindung wird hergestellt...');
+            setStatus('connecting', `Verbindung (${type}) wird hergestellt...`);
 
             socket.onopen = function() {
-                setStatus('connected', 'Verbunden');
-                reconnectAttempts = 0;
+                setStatus('connected', `Verbunden (${type})`);
             };
 
             socket.onmessage = function(event) {
                 try {
                     const data = JSON.parse(event.data);
-                    console.log('Empfangene Daten:', data);
+                    console.log(`Empfangene Daten (${type}):`, data);
 
-                    // Überprüfen, ob es eine Ticket-Count-Aktualisierung ist
-                    if (data.type === 'update_ticket_count') {
-                        const message = data.message;
-                        const messageElement = document.createElement('div');
-                        messageElement.classList.add('ticket-info');
-
-                        messageElement.innerHTML = `
-                            <strong>Titel:</strong> ${message.title}<br>
-                            <strong>Gekaufte Tickets:</strong> ${message.bought_tickets}<br>
-                            <strong>Max. Tickets:</strong> ${message.max_tickets}
-                        `;
-
-                        messagesDiv.appendChild(messageElement);
-                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    if (type === "event") {
+                        handleEventSocketMessage(data);
+                    } else if (type === "notification") {
+                        handleNotificationSocketMessage(data);
                     }
                 } catch (error) {
-                    console.error('Fehler beim Verarbeiten der Nachricht:', error);
+                    console.error(`Fehler beim Verarbeiten der Nachricht (${type}):`, error);
 
                     const errorElement = document.createElement('p');
                     errorElement.textContent = `Fehler: ${error.message}`;
                     errorElement.style.color = 'red';
-                    messagesDiv.appendChild(errorElement);
+                    (type === "event" ? messagesDiv : adminNotificationsDiv).appendChild(errorElement);
                 }
             };
 
             socket.onclose = function(event) {
                 if (event.wasClean) {
-                    setStatus('disconnected', 'Verbindung sauber geschlossen');
+                    setStatus('disconnected', `Verbindung (${type}) sauber geschlossen`);
                 } else {
-                    handleReconnect();
+                    setStatus('disconnected', `Verbindung (${type}) unterbrochen. Bitte neu verbinden.`);
                 }
             };
 
             socket.onerror = function(error) {
-                console.error('WebSocket Fehler:', error);
-                setStatus('disconnected', 'Verbindungsfehler');
-                handleReconnect();
+                console.error(`WebSocket Fehler (${type}):`, error);
+                setStatus('disconnected', `Verbindungsfehler (${type})`);
             };
+
+            return socket;
         }
 
-        function handleReconnect() {
-            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-                reconnectAttempts++;
-                const delay = Math.pow(2, reconnectAttempts) * 1000;
+        function handleEventSocketMessage(data) {
+            if (data.type === 'update_ticket_count' || data.type === 'new_event') {
+                const message = data.message;
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('ticket-info');
 
-                setStatus('disconnected', `Verbindung unterbrochen. Versuche Wiederverbindung (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`);
+                if (data.type === 'update_ticket_count') {
+                    messageElement.innerHTML = `
+                        <strong>Titel:</strong> ${message.title}<br>
+                        <strong>Gekaufte Tickets:</strong> ${message.bought_tickets}<br>
+                        <strong>Max. Tickets:</strong> ${message.max_tickets}
+                    `;
+                } else if (data.type === 'new_event') {
+                    messageElement.innerHTML = `
+                        <strong>Neues Event:</strong> ${message.title}<br>
+                        <strong>Basispreis:</strong> ${message.base_price}<br>
+                        <strong>Threshold-Tickets:</strong> ${message.threshold_tickets}<br>
+                        <strong>Gekaufte Tickets:</strong> ${message.bought_tickets}<br>
+                        <strong>Max. Tickets:</strong> ${message.max_tickets}
+                    `;
+                }
 
-                setTimeout(connectWebSocket, delay);
-            } else {
-                setStatus('disconnected', 'Keine Wiederverbindung möglich. Bitte Seite neu laden.');
+                messagesDiv.appendChild(messageElement);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
             }
         }
 
-        // WebSocket beim Laden der Seite verbinden
-        connectWebSocket();
+        function handleNotificationSocketMessage(data) {
+            const notificationElement = document.createElement('div');
+            notificationElement.classList.add('notification');
+
+            notificationElement.textContent = data.message;
+
+            adminNotificationsDiv.appendChild(notificationElement);
+            adminNotificationsDiv.scrollTop = adminNotificationsDiv.scrollHeight;
+        }
+
+        // WebSocket-Verbindungen initialisieren
+        eventSocket = connectWebSocket('/ws/event/update/', 'event');
+        notificationSocket = connectWebSocket('/ws/admin/notifications/', 'notification');
     </script>
 </body>
 </html>
