@@ -13,28 +13,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Schritt 1: Check out des Codes
       - name: Check out code
         uses: actions/checkout@v3
 
-      # Schritt 2: Python einrichten (Python-Version 3.10 als Beispiel)
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.10  # Hier kannst du eine andere Python-Version angeben, falls nötig
+          python-version: 3.10
 
-      # Schritt 3: Poetry installieren
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
           echo "$HOME/.local/bin" >> $GITHUB_PATH 
 
-      # Schritt 4: Abhängigkeiten installieren (einschließlich Entwicklungsabhängigkeiten)
       - name: Install dependencies
         run: |
           poetry install
 
-      # Schritt 5: Tests ausführen (z. B. mit pytest)
       - name: Run tests
         run: |
           poetry run python manage.py test backend.tests
