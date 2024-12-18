@@ -1,0 +1,38 @@
+name: CI Pipeline with Poetry
+
+on:
+  push:
+    branches:
+      - main, backend
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+        env:
+          PATH: $HOME/.local/bin:$PATH
+
+      - name: Install dependencies
+        run: |
+          poetry install --no-root
+
+      - name: Run tests
+        env:
+          DJANGO_SETTINGS_MODULE: backend.settings
+        run: |
+          poetry run python manage.py test backend.tests
