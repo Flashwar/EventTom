@@ -3,7 +3,8 @@ name: CI Pipeline with Poetry
 on:
   push:
     branches:
-      - main, backend
+      - backend
+      - main
   pull_request:
     branches:
       - main
