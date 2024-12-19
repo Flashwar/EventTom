@@ -36,7 +36,7 @@ Das Projekt umfasst eine Eventmanagement-Webseite, die es Nutzern ermöglicht, T
    ```bash
    git clone https://github.com/Flashwar/EventTom.git
    
-   cd backend-eventtom
+   cd EventTom
    ```
 
 2. **Poetry installieren**:
@@ -66,7 +66,8 @@ Das Projekt umfasst eine Eventmanagement-Webseite, die es Nutzern ermöglicht, T
 1. **Repository klonen**:
    ```bash
    git clone https://github.com/Flashwar/EventTom.git
-   cd backend-eventtom
+  
+   cd EventTom
    ```
 
 2. **Virtuelle Umgebung erstellen und aktivieren**:
@@ -143,7 +144,7 @@ Das Projekt umfasst eine Eventmanagement-Webseite, die es Nutzern ermöglicht, T
 
 ---
 
-## Deployment mit Docker
+## Installation in einem Docker-Container
 
 EvenTom unterstützt Docker-basierte Deployments. Führe folgenden Befehl aus:
 ```bash
@@ -158,18 +159,21 @@ Das Backend ist unter `http://127.0.0.1:8000` erreichbar.
 
 ### Test ausführen Docker
  
-1. Container-ID  ermitteln
+1. Container-ID  ermitteln:
+
 Der Befehl zeigt eine Liste aller laufenden Container. Notieren Sie sich die Container-ID des Backend-Containers.
 ```bash
    docker ps
 ```
 
-2. Container verbinden
+2. Container verbinden:
+
 Ersetzen Sie <containerid> mit der ID des Backend-Containers.
 ```bash
   docker exec -it <containerid> sh
 ```
 3. Tests ausführen
+
 ```bash
   python manage.py makemigrations
 
