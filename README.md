@@ -124,6 +124,8 @@ Das Projekt umfasst eine Eventmanagement-Webseite, die es Nutzern ermöglicht, T
    ```
 2. Tests starten:
    ```bash
+   python manage.py makemigrations
+   
    python manage.py test backend.tests
    ```
 
@@ -134,6 +136,8 @@ Das Projekt umfasst eine Eventmanagement-Webseite, die es Nutzern ermöglicht, T
    ```
 2. Tests starten:
    ```bash
+   python manage.py makemigrations
+   
    python manage.py test backend.tests
    ```
 
@@ -167,5 +171,7 @@ Ersetzen Sie <containerid> mit der ID des Backend-Containers.
 ```
 3. Tests ausführen
 ```bash
+  python manage.py makemigrations
+
   python3 manage.py test backend.tests
 ```
