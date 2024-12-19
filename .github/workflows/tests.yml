@@ -39,4 +39,4 @@ jobs:
         env:
           WEBSITE_HOSTNAME: "127.0.0.1"
         run: |
-          poetry run python manage.py test backend.tests --noinput
+          poetry run python manage.py test backend.tests 

@@ -28,85 +28,144 @@ Das Projekt umfasst eine Eventmanagement-Webseite, die es Nutzern ermöglicht, T
 - **Redis**: Wird für Websockets (Channels) verwendet, um Echtzeit-Benachrichtigungen zu ermöglichen
 - **Pattern**: Dependency Injection, Observer, Decorator und Singelton
 
-## Installation des Backends:
-
 ## Installation
 
-### Backend Setup mit Poetry
+### Backend-Setup mit Poetry
 
-1. **Repository klonen:**
+1. **Repository klonen**:
    ```bash
-   git clone https://github.com/yourusername/backend-eventtom.git
+   git clone https://github.com/Flashwar/EventTom.git
+   
    cd backend-eventtom
    ```
 
-   2. **Poetry installieren:**
-   Wenn Poetry noch nicht installiert ist, kannst du es mit folgendem Befehl einrichten:
-      ```bash
-      curl -sSL https://install.python-poetry.org | python3 -
-      ```
-      Alternativ, lies die [offizielle Dokumentation](https://python-poetry.org/docs/#installation) für detaillierte Anweisungen.
+2. **Poetry installieren**:
+   ```bash
+   curl -sSL https://install.python-poetry.org | python3 -
+   ```
+   Weitere Details findest du in der [offiziellen Dokumentation](https://python-poetry.org/docs/#installation).
 
-3. **Abhängigkeiten installieren:**
-   Nach der Installation von Poetry kann man alle Abhängigkeiten des Projekts mit einem einfachen Befehl installieren:
+3. **Abhängigkeiten installieren**:
    ```bash
    poetry install
    ```
 
-4. **Projektumgebung aktivieren:**
+4. **Projektumgebung aktivieren**:
    ```bash
    poetry shell
    ```
 
-5. **Django-Server starten:**
-   Nachdem die Installation abgeschlossen ist, kann der Server wie folgt gestartet werden:
+5. **Django-Server starten**:
+   Erstelle oder passe die `.env`-Datei an und starte den Server:
    ```bash
    python manage.py runserver
    ```
+   Der Server ist anschließend unter `http://127.0.0.1:8000` verfügbar.
 
-### Alternative: Backend Setup mit virtueller Umgebung (venv)
-
-1. **Virtuelle Umgebung erstellen und aktivieren:**
+### Backend-Setup mit virtueller Umgebung (venv)
+1. **Repository klonen**:
    ```bash
-   python -m venv venv
-   source venv/bin/activate   # Windows: `venv\Scripts\activate`
+   git clone https://github.com/Flashwar/EventTom.git
+   cd backend-eventtom
    ```
 
-2. **Abhängigkeiten mit `pip` installieren:**
+2. **Virtuelle Umgebung erstellen und aktivieren**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate   # Windows: venv\Scripts\activate
+   ```
+
+3. **Abhängigkeiten installieren**:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Django-Server starten:**
-   Starte den Entwicklungsserver mit:
+4. **.env-Datei erstellen und konfigurieren**:
+   Beispiel-Inhalt:
+   ```plaintext
+   SECRET_KEY=<Django-Secret-Key>
+   DATABASE_URL=''
+   WEBSITE_HOSTNAME='127.0.0.1'
+   REDIS_SERVERIP='127.0.0.1'
+   ```
+   **Hinweis**: Den Django-Secret-Key kannst du [hier generieren](https://djecrety.ir/).
+
+5. **Alternative Einstellungen (SQLite, In-Memory-Channels)**:
+   Falls PostgreSQL oder Redis nicht verwendet werden soll, können folgende Anpassungen in `settings.py` vorgenommen werden:
+   ```
+   CHANNEL_LAYERS = {
+       "default": {
+           "BACKEND": "channels.layers.InMemoryChannelLayer"
+       }
+   }
+
+   DATABASES = {
+       'default': {
+           'ENGINE': 'django.db.backends.sqlite3',
+           'NAME': BASE_DIR / "db.sqlite3",
+       }
+   }
+   ```
+
+6. **Django-Server starten**:
    ```bash
    python manage.py runserver
    ```
+   Der Server ist unter `http://127.0.0.1:8000` verfügbar.
+
+---
 
 ## Testen des Projekts
 
-Das Projekt verwendet Django-integrierte Test-Frameworks. Um sicherzustellen, dass alle Funktionen korrekt funktionieren, können Tests wie folgt ausgeführt werden:
-
-### Tests ausführen mit Poetry-Setup:
-1. Stelle sicher, dass du dich in der Poetry-Umgebung befindest (`poetry shell`).
-2. Führe die Tests aus:
+### Tests ausführen (Poetry):
+1. Aktivieren der Poetry-Umgebung:
+   ```bash
+   poetry shell
+   ```
+2. Tests starten:
    ```bash
    python manage.py test backend.tests
    ```
 
-### Tests ausführen mit virtueller Umgebung:
-1. Aktiviere die virtuelle Umgebung (`source venv/bin/activate` oder `venv\Scripts\activate` je nach Betriebssystem).
-2. Führe die Tests aus:
+### Tests ausführen (venv):
+1. Virtuelle Umgebung aktivieren:
+   ```bash
+   source venv/bin/activate   # Windows: venv\Scripts\activate
+   ```
+2. Tests starten:
    ```bash
    python manage.py test backend.tests
    ```
 
-## Starten des Servers
+---
 
-Um die lokale Entwicklungsumgebung zu starten, führe den folgenden Befehl aus:
+## Deployment mit Docker
 
+EvenTom unterstützt Docker-basierte Deployments. Führe folgenden Befehl aus:
 ```bash
-python manage.py runserver
+  docker-compose up --build
+```
+Dabei werden drei Container gestartet:
+1. **Redis**: Für Echtzeit-Kommunikation
+2. **PostgreSQL**: Für Datenbankverwaltung
+3. **Backend**: Für die API und Geschäftslogik
+
+Das Backend ist unter `http://127.0.0.1:8000` erreichbar.
+
+### Test ausführen Docker
+ 
+1. Container-ID  ermitteln
+Der Befehl zeigt eine Liste aller laufenden Container. Notieren Sie sich die Container-ID des Backend-Containers.
+```bash
+   docker ps
 ```
 
-Der Server ist dann unter `http://127.0.0.1:8000` erreichbar.
+2. Container verbinden
+Ersetzen Sie <containerid> mit der ID des Backend-Containers.
+```bash
+  docker exec -it <containerid> sh
+```
+3. Tests ausführen
+```bash
+  python3 manage.py test backend.tests
+```
