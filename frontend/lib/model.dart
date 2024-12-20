@@ -36,30 +36,39 @@ class TicketType {
   factory TicketType.fromJson(Map<String, dynamic> json) {
     return TicketType(
       name: json['username'],
-      maxAmount: json['participant_id'],
-      availAmount: json['username'],
-      basePrice: json['participant_id'],
-      extraPrice: json['participant_id'],
+      maxAmount: json['maxAmount'],
+      availAmount: json['availAmount'],
+      basePrice: json['basePrice'],
+      extraPrice: json['extraPrice'],
     );
   }
 }
 
 class Event {
-  final String name;
-  final List<TicketType> tickets;
-  final DateTime time;
+  final String title;
+  final int max_tickets;
+  final int bought_tickets;
+  final int threshold_tickets;
+  final double base_price;
+  final DateTime date;
 
   Event({
-    required this.name,
-    required this.tickets,
-    required this.time,
+    required this.title,
+    required this.max_tickets,
+    required this.bought_tickets,
+    required this.threshold_tickets,
+    required this.base_price,
+    required this.date,
   });
 
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
-      name: json['username'],
-      tickets: json['participant_id'],
-      time: json['time'],
+      title: json['title'],
+      max_tickets: json['max_tickets'],
+      bought_tickets: json['bought_tickets'],
+      date: DateTime.parse(json['date']),
+      threshold_tickets: json['threshold_tickets'],
+      base_price: double.parse(json['base_price'].toString()),
     );
   }
 }
