@@ -32,7 +32,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS=[f"https://{os.getenv("WEBSITE_HOSTNAME")}"]
+CSRF_TRUSTED_ORIGINS=[f"https://{os.getenv('WEBSITE_HOSTNAME')}"]
 
 # path of the webserver
 ASGI_APPLICATION = "EventTom.asgi.application"

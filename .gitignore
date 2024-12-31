@@ -230,4 +230,8 @@ out/
 .idea/
 
 # Migrations
-./backend/migrations/
+/backend/migrations/
+
+# Terraform variables
+
+/Terraform/varibles.auto.tfvars
