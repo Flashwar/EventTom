@@ -6,7 +6,7 @@ authors = ["Max Tepper <tepper@th-brandenburg.de>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = ">=3.10,<4.0"
 asgiref = "3.8.1"
 attrs = "24.2.0"
 autobahn = "24.4.2"

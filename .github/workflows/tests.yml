@@ -3,7 +3,8 @@ name: CI Pipeline with Poetry
 on:
   push:
     branches:
-      - main, backend
+      - backend
+      - main
   pull_request:
     branches:
       - main
@@ -11,6 +12,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      REDIS_SERVERIP: ${{ secrets.REDIS_SERVERIP }}
 
     steps:
       - name: Check out code
@@ -19,13 +24,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.10
+          python-version: "3.10"
 
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-        env:
-          PATH: $HOME/.local/bin:$PATH
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
         run: |
@@ -33,6 +37,7 @@ jobs:
 
       - name: Run tests
         env:
-          DJANGO_SETTINGS_MODULE: backend.settings
+          WEBSITE_HOSTNAME: "127.0.0.1"
         run: |
+          poetry run python manage.py makemigrations
           poetry run python manage.py test backend.tests
