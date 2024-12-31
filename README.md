@@ -2,7 +2,6 @@
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Flashwar_EventTom&metric=alert_status&token=a25909191128104ff274039bdfb1e587b31b8457)](https://sonarcloud.io/summary/new_code?id=Flashwar_EventTom)
 
-
 Dieses Repository stellt das GitHub-Mirror-Repo für das Eventmanagement-Projekt EventTom dar, das nebenbei auf GitLab gehostet wird. Das Projekt wurde im Rahmen des Semesters "Softwarearchitektur und Qualitätssicherung" im Wintersemester 2024/2025 entwickelt.
 
 ## Projektbeschreibung
@@ -27,6 +26,14 @@ Das Projekt umfasst eine Eventmanagement-Webseite, die es Nutzern ermöglicht, T
 - **Datenbank**: PostgreSQL (DBMS)
 - **Redis**: Wird für Websockets (Channels) verwendet, um Echtzeit-Benachrichtigungen zu ermöglichen
 - **Pattern**: Dependency Injection, Observer, Decorator und Singelton
+
+## Model Schema und Cloud Infrastructure
+
+### Model Schema
+![Alt-Text](ER_diagram.svg)
+### Cloud Infrastructure
+
+![Alt-Text](cc_infrastructure_eventtom.png)
 
 ## Installation
 
