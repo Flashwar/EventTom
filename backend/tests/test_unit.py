@@ -58,11 +58,11 @@ class CouponServiceTests(TestCase):
     # Test: retrieving a valid coupon by ID and username and validate the ownership
     # Test: retrieving an invalid coupon
     def test_get_coupon(self):
-        coupon, error = self.coupon_service.get_coupon(self.coupon.id, "testuser")
+        coupon, error = self.coupon_service.get_coupon(self.coupon.id, self.user.id)
         self.assertIsNotNone(coupon)
         self.assertIsNone(error)
 
-        _, error = self.coupon_service.get_coupon(9999, "testuser")
+        _, error = self.coupon_service.get_coupon(9999, self.user.id)
         self.assertIsNotNone(error)
 
 
