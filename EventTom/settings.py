@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "channels",
     "django_injector",
+    'corsheaders',
     # ER Modeling
     #"django_extensions",
 ]
@@ -81,6 +82,7 @@ SIMPLE_JWT = {
 }
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -189,3 +191,6 @@ GRAPH_MODELS ={
 'all_applications': True,
 'graph_models': True,
 }
+# Allow all CORS REQUEST
+# BAD FOR PRODUCTION
+CORS_ALLOW_ALL_ORIGINS = True
