@@ -194,3 +194,21 @@ GRAPH_MODELS ={
 # Allow all CORS REQUEST
 # BAD FOR PRODUCTION
 CORS_ALLOW_ALL_ORIGINS = True
+
+# allow all headers
+CORS_ALLOW_HEADERS = [
+    'content-type',
+    'authorization',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# allow all HTTPS methods
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS',
+]
