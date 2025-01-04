@@ -40,6 +40,7 @@ dependencies:
   http: ^1.2.2
   syncfusion_flutter_charts: ^27.2.4
   syncfusion_flutter_gauges: ^27.2.4
+  web_socket_channel: ^3.0.1
 
 dev_dependencies:
   flutter_test:

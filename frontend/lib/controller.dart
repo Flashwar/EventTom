@@ -7,18 +7,25 @@ import 'model.dart';
 
 String apiadress =
     'https://saqs-b5h9dwfnfuewamam.francecentral-01.azurewebsites.net/api/';
+String webSocketAdress = apiadress;
 String authorisation = '';
 String username = '';
-String staffnumber = '';
-int id = 1;
+String token = '';
+int user_id = 0;
+String isadmin = '';
+
+int getUserID() {
+  return user_id;
+}
+
+String getWebSocketAdress() {
+  return webSocketAdress;
+}
 
 Future<Response> sendGET(String target) async {
   final response = await get(
     Uri.parse(apiadress + target),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': authorisation,
-    },
+    headers: {'Content-Type': 'application/json', 'Bearer': token},
   );
   return response;
 }
@@ -29,7 +36,7 @@ Future<Response> sendPOST(final body, String target) async {
     headers: <String, String>{
       'Access-Control-Allow-Origin': '*',
       'Content-Type': 'application/json',
-      'Accept': '*/*'
+      'Authorization': 'Bearer ' + token
     },
     body: body,
   );
@@ -45,51 +52,65 @@ Future<void> logout(String name) async {
 
 Future<void> try_login(String uname, String pw, context) async {
   final body = jsonEncode({'password': pw, 'username': uname});
-  int isadmin = 1;
   final response = await sendPOST(body, 'token/');
   if (response.statusCode == 200) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(response.statusCode.toString())));
     final Map<String, dynamic> status = jsonDecode(response.body);
     username = uname;
-    staffnumber = status['access'];
-    isadmin = 0; //status['position']
+    token = status['access'];
+    await setUserID(uname); //status['position']
+    await setUserPos(user_id);
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Logging in...')),
     );
-  }
-  //reused when API added
-  if (1 == 1) {
-    if (isadmin == 0) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Logging in...')),
+    );
+    if (isadmin == 'NO') {
       Navigator.push(context, MaterialPageRoute(builder: (_) => UserPage()));
-    }
-    if (isadmin == 1) {
+    } else if (isadmin == 'EC') {
       Navigator.push(context, MaterialPageRoute(builder: (_) => CreatorPage()));
-    }
-    if (isadmin == 2) {
+    } else if (isadmin == 'EM') {
       Navigator.push(context, MaterialPageRoute(builder: (_) => ManagerPage()));
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Loggin failed')));
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Logging in...')),
-    );
   } else {
     ScaffoldMessenger.of(context)
         .showSnackBar(const SnackBar(content: Text('Loggin failed')));
   }
 }
 
+Future<void> setUserID(String name) async {
+  final body = jsonEncode({'username': name});
+  final response = await sendPOST(body, 'user/getUserId/');
+  final Map<String, dynamic> ID = jsonDecode(response.body);
+  user_id = ID['user_id'];
+}
+
+Future<void> setUserPos(int id) async {
+  final body = jsonEncode({'userid': id});
+  final response = await sendPOST(body, 'user/getEmployeePosition/');
+  final Map<String, dynamic> pos = jsonDecode(response.body);
+  isadmin = pos['jobPosition'];
+}
+
 void deleteGutschein(int id) {}
 
 void buyTicket(
-    int cID, String eName, int tNumber, int couponID, String ticketType) {
+    int cID, String eName, int tamount, int couponID, String ticketType) async {
   final body = jsonEncode({
     'customerID': cID,
     'eventName': eName,
-    'numberTickets': tNumber,
+    'numberTickets': tamount,
     'couponID': couponID,
-    'ticketType': ticketType
+    'ticketTyp': ticketType
   });
-  final response = sendPOST(body, 'user/buyTicket');
+  final response = await sendPOST(body, 'user/buyTicket/');
+  print(1);
 }
 
 Future<void> createEvent(String title, int max_tickets, int bought_tickets,
@@ -99,18 +120,17 @@ Future<void> createEvent(String title, int max_tickets, int bought_tickets,
     'max_tickets': max_tickets,
     'bought_tickets': bought_tickets,
     'threshold_tickets': threshold,
-    'base_price': base_price,
-    'date': date
+    'base_price': base_price
   });
   final response = await sendPOST(body, 'manage/createEvent/');
-  if (response.statusCode == 200) {
+  if (response.statusCode == 201) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(response.statusCode.toString())));
   }
 }
 
-double getPrice() {
-  return 5.0;
+double getFee() {
+  return 0.12;
 }
 
 Future<Event> getEvent(String title) async {
@@ -130,15 +150,16 @@ Future<List<Event>> getAllEvents() async {
 
 Future<String> getPosition(int uID) async {
   final body = jsonEncode({'userid': uID});
-  final response = await sendPOST(body, 'user/getEmployeePosition');
+  final response = await sendPOST(body, 'user/getEmployeePosition/');
   final Map<String, dynamic> choosen = jsonDecode(response.body);
   return choosen['position'];
 }
 
-/*
-TicketType getTicket() {}
-
-Gutschein getGutschein() {}
-
-List<Event> getAllEvents() {}
-*/
+Future<List<Gutschein>> getGutschein(int uID) async {
+  final body = jsonEncode({'ownerID': uID});
+  final response = await sendPOST(body, 'user/listCoupons/');
+  final List<dynamic> jsonResponse = jsonDecode(response.body);
+  final List<Gutschein> gutscheinList =
+      jsonResponse.map((gutschein) => Gutschein.fromJson(gutschein)).toList();
+  return gutscheinList;
+}

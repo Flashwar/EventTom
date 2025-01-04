@@ -84,8 +84,8 @@ class Gutschein {
 
   factory Gutschein.fromJson(Map<String, dynamic> json) {
     return Gutschein(
-      id: json['username'],
-      amount: json['participant_id'],
+      id: json['id'],
+      amount: double.parse(json['amount']),
     );
   }
 }

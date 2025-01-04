@@ -4,14 +4,17 @@ import 'package:http/http.dart';
 import 'controller.dart';
 import 'model.dart';
 import 'package:flutter/services.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 const double textWidth = 300;
-String user_id = '';
+int user_id = 0;
 String current_username = '';
+String webSocketAdress = getWebSocketAdress();
 int isadmin = 2;
 Color red_colour = Color.fromRGBO(77, 153, 143, 1);
 Color blue_colour = Color.fromRGBO(50, 121, 194, 1.00);
 Color black_colour = Color.fromRGBO(33, 37, 41, 1.00);
+
 Event curEvent = new Event(
     base_price: 1.0,
     threshold_tickets: 1,
@@ -230,6 +233,10 @@ class UserPage extends StatefulWidget {
 }
 
 class _UserPage extends State<UserPage> {
+  final _channel = WebSocketChannel.connect(
+    Uri.parse(webSocketAdress),
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -281,19 +288,54 @@ class EventView extends StatefulWidget {
 
 class _EventView extends State<EventView> {
   final TextEditingController _amountController = TextEditingController();
+  final channel = WebSocketChannel.connect(
+    Uri.parse(webSocketAdress),
+  );
+  int _ticketChangeInSetion = 0;
   int _currentamount = 0;
+  final int _minVal = 0;
+  int _maxVal = 100;
+  int couponId = 0;
+  double gutscheinWert = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController.addListener(() {
+      final text = _amountController.text;
+      if (text.isNotEmpty) {
+        final value = int.tryParse(text);
+        if (value != null) {
+          if (value < _minVal) {
+            _amountController.text = _minVal.toString();
+          } else if (value > _maxVal) {
+            _amountController.text = _maxVal.toString();
+          }
+          _amountController.selection = TextSelection.fromPosition(
+            TextPosition(offset: _amountController.text.length),
+          );
+        }
+      } else {
+        _amountController.text = _minVal.toString();
+      }
+    });
+  }
 
   void _decrement() {
     setState(() {
-      _currentamount--;
-      _amountController.text = _currentamount.toString();
+      if (_currentamount > _minVal) {
+        _currentamount--;
+        _amountController.text = _currentamount.toString();
+      }
     });
   }
 
   void _increment() {
     setState(() {
-      _currentamount++;
-      _amountController.text = _currentamount.toString();
+      if (_currentamount < _maxVal) {
+        _currentamount++;
+        _amountController.text = _currentamount.toString();
+      }
     });
   }
 
@@ -301,6 +343,11 @@ class _EventView extends State<EventView> {
     setState(() {
       _currentamount = int.tryParse(value) ?? 0;
     });
+  }
+
+  void _vbuyTickets(
+      int id, String eName, int amount, int couponID, String tickType) {
+    buyTicket(id, eName, amount, couponID, tickType);
   }
 
   @override
@@ -319,11 +366,20 @@ class _EventView extends State<EventView> {
               endIndent: 0,
               color: red_colour,
             ),
-            const Text('Verfügbare Tickets', textAlign: TextAlign.center),
-            Text(
-                (widget.evnt.max_tickets - widget.evnt.bought_tickets)
-                    .toString(),
-                textAlign: TextAlign.center),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text('Verfügbare Tickets', textAlign: TextAlign.center),
+              Divider(
+                height: 40,
+                thickness: 2,
+                indent: 20,
+                endIndent: 0,
+                color: red_colour,
+              ),
+              Text(
+                  (widget.evnt.max_tickets - widget.evnt.bought_tickets)
+                      .toString(),
+                  textAlign: TextAlign.center),
+            ]),
             Divider(
               height: 40,
               thickness: 2,
@@ -331,9 +387,32 @@ class _EventView extends State<EventView> {
               endIndent: 0,
               color: red_colour,
             ),
-            const Text('Ticket Preis', textAlign: TextAlign.center),
-            Text((widget.evnt.base_price).toString(),
-                textAlign: TextAlign.center),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text('Ticket Preis', textAlign: TextAlign.center),
+              Divider(
+                height: 40,
+                thickness: 2,
+                indent: 20,
+                endIndent: 0,
+                color: red_colour,
+              ),
+              Text((widget.evnt.base_price).toString(),
+                  textAlign: TextAlign.center),
+              //
+            ]),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              const Text('Gutschein hinzufügen', textAlign: TextAlign.center),
+              IconButton(
+                onPressed: () {
+                  showDialog(
+                      context: context,
+                      builder: (context) {
+                        return chooseGutschein();
+                      });
+                },
+                icon: Icon(Icons.add),
+              ),
+            ]),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -353,13 +432,90 @@ class _EventView extends State<EventView> {
                   ),
                 ),
                 IconButton(
-                  onPressed: _increment,
+                  onPressed: () {
+                    _increment();
+                    _maxVal =
+                        widget.evnt.max_tickets - widget.evnt.bought_tickets;
+                  },
                   icon: Icon(Icons.add),
                 ),
               ],
             ),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text((widget.evnt.base_price * _currentamount).toString(),
+                  textAlign: TextAlign.center),
+              TextButton(
+                  onPressed: () {
+                    _vbuyTickets(getUserID(), widget.evnt.title, _currentamount,
+                        couponId, 'Standard');
+                  },
+                  child: Text('kaufen'))
+            ])
           ]),
     );
+  }
+
+  Widget chooseGutschein() {
+    return Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
+        elevation: 16,
+        child: Column(children: <Widget>[
+          const Text('Gutschein wählen', textAlign: TextAlign.left),
+          const SizedBox(height: 10),
+          Container(
+              width: 500,
+              child: Column(children: <Widget>[
+                Row(children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      shape: const BeveledRectangleBorder(),
+                      alignment: Alignment.centerLeft,
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text('Abbrechen',
+                        style:
+                            TextStyle(fontFamily: 'Arial', color: blue_colour)),
+                  ),
+                  SizedBox(width: 40.0),
+                  const Text('Gutscheine:', textAlign: TextAlign.left),
+                ]),
+                FutureBuilder<List<Gutschein>>(
+                  future: getGutschein(getUserID()),
+                  builder: (context, snapshot) {
+                    // Handling different states
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else if (snapshot.hasData) {
+                      final items = snapshot.data!;
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: items.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            leading: CircleAvatar(
+                                child: Text((index + 1).toString())),
+                            title: Text(items[index].amount.toString()),
+                            dense: true,
+                            visualDensity: VisualDensity(vertical: -3),
+                            onTap: () {
+                              couponId = items[index].id;
+                              Navigator.pop(context);
+                            },
+                          );
+                        },
+                      );
+                    } else {
+                      return const Center(child: Text('No data available.'));
+                    }
+                  },
+                ),
+              ])),
+        ]));
   }
 }
 
@@ -371,6 +527,9 @@ class ManagerPage extends StatefulWidget {
 }
 
 class _ManagerPage extends State<ManagerPage> {
+  final channel = WebSocketChannel.connect(
+    Uri.parse(webSocketAdress),
+  );
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -391,6 +550,15 @@ class _ManagerPage extends State<ManagerPage> {
                 return ListTile(
                   leading: CircleAvatar(child: Text((index + 1).toString())),
                   title: Text(items[index].title),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ManagerEventView(evnt: items[index]),
+                      ),
+                    );
+                  },
                 );
               },
             );
@@ -399,6 +567,73 @@ class _ManagerPage extends State<ManagerPage> {
           }
         },
       ),
+    );
+  }
+}
+
+class ManagerEventView extends StatefulWidget {
+  const ManagerEventView({super.key, required this.evnt});
+
+  final Event evnt;
+
+  @override
+  State<ManagerEventView> createState() => _ManagerEventView();
+}
+
+class _ManagerEventView extends State<ManagerEventView> {
+  final channel = WebSocketChannel.connect(
+    Uri.parse(webSocketAdress),
+  );
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.evnt.title)),
+      body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(widget.evnt.title, textAlign: TextAlign.center),
+            SizedBox(height: 10),
+            Divider(
+              height: 40,
+              thickness: 2,
+              indent: 20,
+              endIndent: 0,
+              color: red_colour,
+            ),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text('Verfügbare Tickets', textAlign: TextAlign.center),
+              Divider(
+                height: 40,
+                thickness: 2,
+                indent: 20,
+                endIndent: 0,
+                color: red_colour,
+              ),
+              Text(
+                  (widget.evnt.max_tickets - widget.evnt.bought_tickets)
+                      .toString(),
+                  textAlign: TextAlign.center),
+            ]),
+            Divider(
+              height: 40,
+              thickness: 2,
+              indent: 20,
+              endIndent: 0,
+              color: red_colour,
+            ),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text('Gekaufte Tickets', textAlign: TextAlign.center),
+              Divider(
+                height: 40,
+                thickness: 2,
+                indent: 20,
+                endIndent: 0,
+                color: red_colour,
+              ),
+              Text((widget.evnt.bought_tickets).toString(),
+                  textAlign: TextAlign.center),
+            ]),
+          ]),
     );
   }
 }
@@ -497,6 +732,56 @@ class _CreatorPage extends State<CreatorPage> {
             const SizedBox(
               height: 20,
             ),
+            const Text('Maximale Tickets', textAlign: TextAlign.left),
+            Center(
+              child: SizedBox(
+                width: textWidth,
+                child: TextFormField(
+                  controller: _EventMaxTicketsController,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration:
+                      const InputDecoration(labelText: 'Maximale Tickets'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Maximale Tickets';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            const Text('Ticket Preis', textAlign: TextAlign.left),
+            Center(
+              child: SizedBox(
+                width: textWidth,
+                child: TextFormField(
+                  controller: _EventPriceController,
+                  decoration: const InputDecoration(labelText: 'Ticket Preis'),
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Ticket Preis';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: blue_colour,
+                shape: const BeveledRectangleBorder(),
+              ),
+              onPressed: () => _selectDate(context),
+              child: const Text('Datum auswählen',
+                  style: TextStyle(fontFamily: 'Arial', color: Colors.white)),
+            ),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -510,15 +795,6 @@ class _CreatorPage extends State<CreatorPage> {
                 child: Text('Abbrechen',
                     style: TextStyle(fontFamily: 'Arial', color: blue_colour)),
               ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: blue_colour,
-                  shape: const BeveledRectangleBorder(),
-                ),
-                onPressed: () => _selectDate(context),
-                child: const Text('Datum auswählen',
-                    style: TextStyle(fontFamily: 'Arial', color: Colors.white)),
-              ),
               Spacer(),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -529,15 +805,15 @@ class _CreatorPage extends State<CreatorPage> {
                 onPressed: () {
                   createEvent(
                       _EventTitleController.text,
-                      _EventMaxTicketsController.text as int,
+                      int.parse(_EventMaxTicketsController.text),
                       0,
-                      ((_EventMaxTicketsController.text as num) / 2).toInt(),
-                      (_EventPriceController.text as num) * 1.0,
+                      (int.parse(_EventMaxTicketsController.text) / 2).toInt(),
+                      double.parse(_EventPriceController.text),
                       DateTime.now(),
                       context);
                   Navigator.pop(context);
                 },
-                child: const Text('Ändern',
+                child: const Text('Event erstellen',
                     style: TextStyle(fontFamily: 'Arial', color: Colors.white)),
               ),
             ]),
@@ -549,8 +825,8 @@ class _CreatorPage extends State<CreatorPage> {
     final DateTime? picked = await showDatePicker(
         context: context,
         initialDate: selectedDate,
-        firstDate: DateTime(2024, 7, 1),
-        lastDate: DateTime(2024, 7, 31));
+        firstDate: DateTime(2025, 1, 1),
+        lastDate: DateTime(2025, 7, 31));
     if (picked != null && picked != selectedDate) {
       selectedDate = picked;
     }
