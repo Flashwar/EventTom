@@ -191,9 +191,8 @@ GRAPH_MODELS ={
 'all_applications': True,
 'graph_models': True,
 }
-# Allow all CORS REQUEST
-# BAD FOR PRODUCTION
-CORS_ALLOW_ALL_ORIGINS = True
+# Allow all CORS Credentials
+CORS_ALLOW_CREDENTIALS = True
 
 # allow all headers
 CORS_ALLOW_HEADERS = [
@@ -211,4 +210,8 @@ CORS_ALLOW_METHODS = [
     'PATCH',
     'DELETE',
     'OPTIONS',
+]
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
 ]
