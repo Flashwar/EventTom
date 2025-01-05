@@ -38,6 +38,7 @@ services:
       - SECRET_KEY=placeholder-secret-key
       - DATABASE_URL=postgresql://myuser:mypassword@postgres:5432/mydb
       - REDIS_URL=redis://redis:6379/0
+      - WEBSITE_HOSTNAME=127.0.0.1
     command: >
       sh -c "python manage.py makemigrations &&
              python manage.py migrate &&

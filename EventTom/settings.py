@@ -195,12 +195,7 @@ GRAPH_MODELS ={
 CORS_ALLOW_CREDENTIALS = True
 
 # allow all headers
-CORS_ALLOW_HEADERS = [
-    'content-type',
-    'authorization',
-    'x-csrftoken',
-    'x-requested-with',
-]
+CORS_ALLOW_HEADERS = '*'
 
 # allow all HTTPS methods
 CORS_ALLOW_METHODS = [
