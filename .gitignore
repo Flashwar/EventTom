@@ -235,3 +235,4 @@ out/
 # Terraform variables
 
 /Terraform/varibles.auto.tfvars
+/docker-compose.sebastian.yml

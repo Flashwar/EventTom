@@ -82,10 +82,10 @@ SIMPLE_JWT = {
 }
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -196,13 +196,8 @@ CORS_ALLOW_CREDENTIALS = True
 
 # allow all headers
 CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
     'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
+    'authorization',
     'x-csrftoken',
     'x-requested-with',
 ]
@@ -218,5 +213,13 @@ CORS_ALLOW_METHODS = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
+    "https://saqs-b5h9dwfnfuewamam.francecentral-01.azurewebsites.net",
+    "http://saqs-b5h9dwfnfuewamam.francecentral-01.azurewebsites.net",
+    "https://localhost:3000",
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://127.0.0.1:3000",
+    "https://localhost:8000"
+
 ]
