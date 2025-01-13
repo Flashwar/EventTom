@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "channels",
     "django_injector",
-    'corsheaders',
+    #'corsheaders',
     # ER Modeling
     #"django_extensions",
 ]
@@ -83,7 +83,7 @@ SIMPLE_JWT = {
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
+    #"corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -192,34 +192,34 @@ GRAPH_MODELS ={
 'graph_models': True,
 }
 # Allow all CORS Credentials
-CORS_ALLOW_CREDENTIALS = True
-
-# allow all headers
-CORS_ALLOW_HEADERS = [
-    'content-type',
-    'authorization',
-    'x-csrftoken',
-    'x-requested-with',
-]
-
-# allow all HTTPS methods
-CORS_ALLOW_METHODS = [
-    'GET',
-    'POST',
-    'PUT',
-    'PATCH',
-    'DELETE',
-    'OPTIONS',
-]
-
-CORS_ALLOWED_ORIGINS = [
-    "https://saqs-b5h9dwfnfuewamam.francecentral-01.azurewebsites.net",
-    "http://saqs-b5h9dwfnfuewamam.francecentral-01.azurewebsites.net",
-    "https://localhost:3000",
-    "http://localhost:3000",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://127.0.0.1:3000",
-    "https://localhost:8000"
-
-]
+# CORS_ALLOW_CREDENTIALS = True
+#
+# # allow all headers
+# CORS_ALLOW_HEADERS = [
+#     'content-type',
+#     'authorization',
+#     'x-csrftoken',
+#     'x-requested-with',
+# ]
+#
+# # allow all HTTPS methods
+# CORS_ALLOW_METHODS = [
+#     'GET',
+#     'POST',
+#     'PUT',
+#     'PATCH',
+#     'DELETE',
+#     'OPTIONS',
+# ]
+#
+# CORS_ALLOWED_ORIGINS = [
+#     "https://saqs-b5h9dwfnfuewamam.francecentral-01.azurewebsites.net",
+#     "http://saqs-b5h9dwfnfuewamam.francecentral-01.azurewebsites.net",
+#     "https://localhost:3000",
+#     "http://localhost:3000",
+#     "http://localhost:8000",
+#     "http://127.0.0.1:8000",
+#     "http://127.0.0.1:3000",
+#     "https://localhost:8000"
+#
+# ]
