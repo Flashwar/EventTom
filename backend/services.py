@@ -100,12 +100,12 @@ class EmployeeService:
 @singleton
 class CouponService:
     # Retrieves a coupon by its ID and validates ownership by username
-    def get_coupon(self, coupon_id, owner_username):
+    def get_coupon(self, coupon_id, owner_id):
         try:
             # Query for the coupon by its ID
             coupon = Coupon.objects.get(id=coupon_id)
             # Validate if the coupon owner matches the username
-            if str(coupon.owner) != str(owner_username):
+            if coupon.owner_id != owner_id:
                 return None, {"error": "The coupon isn't owned by the user"}
             # Return the coupon if the owner matches
             return coupon, None
