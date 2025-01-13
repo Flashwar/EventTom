@@ -236,3 +236,5 @@ out/
 
 /Terraform/varibles.auto.tfvars
 /docker-compose.sebastian.yml
+/Neuer Ordner
+/docker-compose.demo.yml
