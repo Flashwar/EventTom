@@ -89,17 +89,32 @@
             };
 
             socket.onclose = function(event) {
-                if (event.wasClean) {
-                    setStatus('disconnected', `Verbindung (${type}) sauber geschlossen`);
-                } else {
-                    setStatus('disconnected', `Verbindung (${type}) unterbrochen. Bitte neu verbinden.`);
-                }
-            };
+    if (event.wasClean) {
+        console.log(`Verbindung (${type}) sauber geschlossen.`);
+        setStatus('disconnected', `Verbindung (${type}) sauber geschlossen`);
+    } else {
+        console.error(`Verbindung (${type}) wurde unerwartet geschlossen. Code: ${event.code}, Grund: ${event.reason}`);
+        setStatus('disconnected', `Verbindung (${type}) unterbrochen. Bitte neu verbinden.`);
 
-            socket.onerror = function(error) {
-                console.error(`WebSocket Fehler (${type}):`, error);
-                setStatus('disconnected', `Verbindungsfehler (${type})`);
-            };
+        // Fehlerdetails im UI anzeigen
+        const errorElement = document.createElement('p');
+        errorElement.textContent = `Fehler beim Verbindungsaufbau (${type}): Code ${event.code}, Grund: ${event.reason || 'Unbekannt'}`;
+        errorElement.style.color = 'red';
+        (type === "event" ? messagesDiv : adminNotificationsDiv).appendChild(errorElement);
+    }
+};
+
+socket.onerror = function(error) {
+    console.error(`WebSocket Fehler (${type}):`, error);
+
+    // Eine Fehlermeldung im UI anzeigen
+    const errorElement = document.createElement('p');
+    errorElement.textContent = `WebSocket-Fehler (${type}): Verbindung konnte nicht hergestellt werden.`;
+    errorElement.style.color = 'red';
+    (type === "event" ? messagesDiv : adminNotificationsDiv).appendChild(errorElement);
+
+    setStatus('disconnected', `Verbindungsfehler (${type})`);
+};
 
             return socket;
         }
