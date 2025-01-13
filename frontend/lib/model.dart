@@ -47,8 +47,8 @@ class TicketType {
 class Event {
   final String title;
   final int max_tickets;
-  final int bought_tickets;
-  final int threshold_tickets;
+  int bought_tickets;
+  int threshold_tickets;
   final double base_price;
   final DateTime date;
 

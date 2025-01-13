@@ -1,6 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'dart:convert';
 import 'package:http/http.dart';
+import 'package:web_socket_channel/io.dart';
 import 'controller.dart';
 import 'model.dart';
 import 'package:flutter/services.dart';
@@ -14,6 +17,8 @@ int isadmin = 2;
 Color red_colour = Color.fromRGBO(77, 153, 143, 1);
 Color blue_colour = Color.fromRGBO(50, 121, 194, 1.00);
 Color black_colour = Color.fromRGBO(33, 37, 41, 1.00);
+Color highlightColor = Color.fromRGBO(247, 192, 11, 1);
+Color barColor = Color.fromRGBO(6, 86, 167, 1);
 
 Event curEvent = new Event(
     base_price: 1.0,
@@ -30,7 +35,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'EventTim',
+      title: 'EventTom',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -38,7 +43,7 @@ class MyApp extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(
           backgroundColor: red_colour,
-          title: const Text('EventTim',
+          title: const Text('EventTom',
               textAlign: TextAlign.center,
               style: TextStyle(fontFamily: 'Arial', color: Colors.white)),
         ),
@@ -67,15 +72,17 @@ class _LoginPage extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    return Center(
+        // Das Formular wird mittig zentriert
+        child: Padding(
+      padding: const EdgeInsets.all(16.0), // Abstand vom Rand
       child: Form(
         key: _formKey,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Center(
-              child: Text('EventTim'),
+              child: Text('EventTom'),
             ),
             const SizedBox(height: 20),
             const Center(
@@ -130,9 +137,8 @@ class _LoginPage extends State<LoginPage> {
                 shape: const BeveledRectangleBorder(),
               ),
               onPressed: () {
-                try_login('BeatBuddha', 'BlackPearl24', context);
-                /*try_login(_usernameController.text, _passwordController.text,
-                    context);*/
+                try_login(_usernameController.text,
+                    'BlackPearl24' /*_passwordController.text*/, context);
               },
               child: const Text('Einloggen',
                   style: TextStyle(fontFamily: 'Arial', color: Colors.white)),
@@ -153,7 +159,7 @@ class _LoginPage extends State<LoginPage> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget resetpw() {
@@ -234,44 +240,104 @@ class UserPage extends StatefulWidget {
 
 class _UserPage extends State<UserPage> {
   final _channel = WebSocketChannel.connect(
-    Uri.parse(webSocketAdress),
+    Uri.parse(webSocketAdress + 'event/update/'),
   );
+
+  final List<String> imagePaths = [
+    'assets/images/istockphoto-505963814-1024x1024.jpg',
+    'assets/images/istockphoto-1128020862-1024x1024.jpg',
+    'assets/images/istockphoto-1340877488-1024x1024.jpg',
+    'assets/images/istockphoto-1440928369-1024x1024.jpg',
+    'assets/images/istockphoto-1483833011-1024x1024.jpg',
+    'assets/images/istockphoto-1783743772-1024x1024.jpg',
+    'assets/images/istockphoto-2150389695-1024x1024.jpg',
+    'assets/images/istockphoto-2150707819-1024x1024.jpg',
+    'assets/images/istockphoto-2152071167-1024x1024.jpg',
+    'assets/images/istockphoto-2155005515-1024x1024.jpg',
+    'assets/images/istockphoto-2157031195-1024x1024.jpg'
+    // Add more image paths as needed
+  ];
+
+  @override
+  void dispose() {
+    // Close the WebSocket connection when the widget is disposed
+    _channel.sink.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Artifacts')),
-      body: FutureBuilder<List<Event>>(
-        future: getAllEvents(),
-        builder: (context, snapshot) {
-          // Handling different states
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (snapshot.hasData) {
-            final items = snapshot.data!;
-            return ListView.builder(
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  leading: CircleAvatar(child: Text((index + 1).toString())),
-                  title: Text(items[index].title),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EventView(evnt: items[index]),
-                      ),
-                    );
-                  },
-                );
+      appBar: AppBar(title: Text('Events')),
+      body: ListView(
+        children: <Widget>[
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: 100), // Limit the height
+            child: StreamBuilder(
+              stream: _channel.stream,
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}',
+                      textAlign: TextAlign.right);
+                } else if (snapshot.connectionState == ConnectionState.active) {
+                  if (snapshot.hasData) {
+                    final Map<String, dynamic> pos = jsonDecode(snapshot.data);
+                    if (pos['type'] == 'new_event') {
+                      return Text(
+                          'New Message: Ein neues Event findet statt, sei der Erste der bei ' +
+                              pos['message']['title'] +
+                              ' dabei ist^^',
+                          textAlign: TextAlign.right);
+                    } else {
+                      return Text('', textAlign: TextAlign.right);
+                    }
+                  } else {
+                    return Text('No messages yet.', textAlign: TextAlign.right);
+                  }
+                }
+                return Text('', textAlign: TextAlign.right);
               },
-            );
-          } else {
-            return const Center(child: Text('No data available.'));
-          }
-        },
+            ),
+          ),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: 900), // Limit the height
+            child: FutureBuilder<List<Event>>(
+              future: getAllEvents(),
+              builder: (context, snapshot) {
+                // Handling different states
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (snapshot.hasData) {
+                  final items = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        leading: CircleAvatar(
+                            child: Image.asset(
+                                'assets/images/istockphoto-505963814-1024x1024.jpg') /*Text((index + 1).toString())*/),
+                        title: Text(items[index].title),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  EventView(evnt: items[index]),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                } else {
+                  return const Center(child: Text('No data available.'));
+                }
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -288,19 +354,27 @@ class EventView extends StatefulWidget {
 
 class _EventView extends State<EventView> {
   final TextEditingController _amountController = TextEditingController();
-  final channel = WebSocketChannel.connect(
-    Uri.parse(webSocketAdress),
+  final _channel = WebSocketChannel.connect(
+    Uri.parse(webSocketAdress + 'event/update/'),
   );
-  int _ticketChangeInSetion = 0;
   int _currentamount = 0;
   final int _minVal = 0;
+  int bought_tickets = 0;
   int _maxVal = 100;
   int couponId = 0;
   double gutscheinWert = 0.0;
 
   @override
+  void dispose() {
+    // Close the WebSocket connection when the widget is disposed
+    _channel.sink.close();
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
+    bought_tickets = widget.evnt.bought_tickets;
     _amountController.addListener(() {
       final text = _amountController.text;
       if (text.isNotEmpty) {
@@ -319,6 +393,25 @@ class _EventView extends State<EventView> {
         _amountController.text = _minVal.toString();
       }
     });
+    _channel.stream.listen(
+      (data) {
+        final Map<String, dynamic> pos = jsonDecode(data);
+        if (pos['message']['title'] == widget.evnt.title) {
+          setState(() {
+            bought_tickets = 7;
+            //pos['message']['bought_tickets'];
+          });
+
+          //widget.evnt.max_tickets - int.parse(pos['bought_tickets']);
+        }
+      },
+      onError: (error) {
+        print('WebSocket Error: $error');
+      },
+      onDone: () {
+        print('WebSocket Connection Closed');
+      },
+    );
   }
 
   void _decrement() {
@@ -375,9 +468,7 @@ class _EventView extends State<EventView> {
                 endIndent: 0,
                 color: red_colour,
               ),
-              Text(
-                  (widget.evnt.max_tickets - widget.evnt.bought_tickets)
-                      .toString(),
+              Text((widget.evnt.max_tickets - bought_tickets).toString(),
                   textAlign: TextAlign.center),
             ]),
             Divider(
@@ -396,7 +487,9 @@ class _EventView extends State<EventView> {
                 endIndent: 0,
                 color: red_colour,
               ),
-              Text((widget.evnt.base_price).toString(),
+              Text(
+                  (widget.evnt.base_price + (widget.evnt.base_price * getFee()))
+                      .toString(),
                   textAlign: TextAlign.center),
               //
             ]),
@@ -442,12 +535,28 @@ class _EventView extends State<EventView> {
               ],
             ),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Text((widget.evnt.base_price * _currentamount).toString(),
+              Text(
+                  (widget.evnt.base_price * _currentamount +
+                          ((widget.evnt.base_price * _currentamount) *
+                                      getFee() >
+                                  gutscheinWert
+                              ? (widget.evnt.base_price * _currentamount) *
+                                      getFee() -
+                                  gutscheinWert
+                              : 0))
+                      .toString(),
                   textAlign: TextAlign.center),
               TextButton(
                   onPressed: () {
                     _vbuyTickets(getUserID(), widget.evnt.title, _currentamount,
                         couponId, 'Standard');
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(_amountController.text +
+                            ' Tickets wurden gekauft')));
+                    setState(() {
+                      _currentamount = 0;
+                      _amountController.text = '0';
+                    });
                   },
                   child: Text('kaufen'))
             ])
@@ -504,6 +613,7 @@ class _EventView extends State<EventView> {
                             visualDensity: VisualDensity(vertical: -3),
                             onTap: () {
                               couponId = items[index].id;
+                              gutscheinWert = items[index].amount;
                               Navigator.pop(context);
                             },
                           );
@@ -527,46 +637,82 @@ class ManagerPage extends StatefulWidget {
 }
 
 class _ManagerPage extends State<ManagerPage> {
-  final channel = WebSocketChannel.connect(
-    Uri.parse(webSocketAdress),
+  final _channel = WebSocketChannel.connect(
+    Uri.parse(webSocketAdress + 'admin/notifications/'),
   );
+  String _receivedMessage = '';
+
+  @override
+  void dispose() {
+    // Close the WebSocket connection when the widget is disposed
+    _channel.sink.close();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Artifacts')),
-      body: FutureBuilder<List<Event>>(
-        future: getAllEvents(),
-        builder: (context, snapshot) {
-          // Handling different states
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (snapshot.hasData) {
-            final items = snapshot.data!;
-            return ListView.builder(
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  leading: CircleAvatar(child: Text((index + 1).toString())),
-                  title: Text(items[index].title),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ManagerEventView(evnt: items[index]),
-                      ),
+      appBar: AppBar(title: Text('Events')),
+      body: ListView(children: <Widget>[
+        ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: 100), // Limit the height
+          child: StreamBuilder(
+            stream: _channel.stream,
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}',
+                    textAlign: TextAlign.right);
+              } else if (snapshot.connectionState == ConnectionState.active) {
+                if (snapshot.hasData) {
+                  final Map<String, dynamic> pos = jsonDecode(snapshot.data);
+                  return Text('Neue Nachricht: ' + pos['message'],
+                      textAlign: TextAlign.right);
+                } else {
+                  return Text('No messages yet.', textAlign: TextAlign.right);
+                }
+              }
+              return Text('', textAlign: TextAlign.right);
+            },
+          ),
+        ),
+        ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: 900), // Limit the height
+          child: FutureBuilder<List<Event>>(
+            future: getAllEvents(),
+            builder: (context, snapshot) {
+              // Handling different states
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              } else if (snapshot.hasData) {
+                final items = snapshot.data!;
+                return ListView.builder(
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      leading:
+                          CircleAvatar(child: Text((index + 1).toString())),
+                      title: Text(items[index].title),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                ManagerEventView(evnt: items[index]),
+                          ),
+                        );
+                      },
                     );
                   },
                 );
-              },
-            );
-          } else {
-            return const Center(child: Text('No data available.'));
-          }
-        },
-      ),
+              } else {
+                return const Center(child: Text('No data available.'));
+              }
+            },
+          ),
+        ),
+      ]),
     );
   }
 }
@@ -581,9 +727,68 @@ class ManagerEventView extends StatefulWidget {
 }
 
 class _ManagerEventView extends State<ManagerEventView> {
-  final channel = WebSocketChannel.connect(
-    Uri.parse(webSocketAdress),
-  );
+  final _channel = WebSocketChannel.connect(
+    Uri.parse(webSocketAdress + 'event/update/'),
+  ); // Initial value
+  int _maxValue = 55; // Maximum value
+  int _thresholdLow = 20;
+  int _thresholdHigh = 30;
+  int bought_tickets = 0;
+  String eventname = '';
+
+  Color _getBarColor(int value) {
+    if (value > _thresholdLow && value < _thresholdHigh) {
+      return highlightColor; // Highlight color
+    }
+    print(_thresholdLow);
+    print(_thresholdHigh);
+    print(value);
+    return barColor;
+    // Default color
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    bought_tickets = widget.evnt.bought_tickets;
+    _maxValue = widget.evnt.max_tickets;
+    print(widget.evnt.threshold_tickets);
+
+    print(widget.evnt.max_tickets * 0.1);
+    _thresholdLow =
+        widget.evnt.threshold_tickets - (widget.evnt.max_tickets * 0.1).toInt();
+    _thresholdHigh =
+        widget.evnt.threshold_tickets + (widget.evnt.max_tickets * 0.1).toInt();
+
+    // Listen for WebSocket messages
+    _channel.stream.listen(
+      (data) {
+        // Perform an action when data is received
+        final Map<String, dynamic> pos = jsonDecode(data);
+        if (pos['type'] == 'update_ticket_count' &&
+            pos['message']['title'] == widget.evnt.title) {
+          setState(() {
+            bought_tickets = pos['message']['bought_tickets'];
+            //
+          });
+        }
+      },
+      onError: (error) {
+        print('WebSocket Error: $error');
+      },
+      onDone: () {
+        print('WebSocket Connection Closed');
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    // Close the WebSocket connection when the widget is disposed
+    _channel.sink.close();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -609,9 +814,7 @@ class _ManagerEventView extends State<ManagerEventView> {
                 endIndent: 0,
                 color: red_colour,
               ),
-              Text(
-                  (widget.evnt.max_tickets - widget.evnt.bought_tickets)
-                      .toString(),
+              Text((widget.evnt.max_tickets - bought_tickets).toString(),
                   textAlign: TextAlign.center),
             ]),
             Divider(
@@ -630,9 +833,42 @@ class _ManagerEventView extends State<ManagerEventView> {
                 endIndent: 0,
                 color: red_colour,
               ),
-              Text((widget.evnt.bought_tickets).toString(),
-                  textAlign: TextAlign.center),
+              Text((bought_tickets).toString(), textAlign: TextAlign.center),
             ]),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Stack(
+                children: [
+                  Container(
+                    height: 20,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.grey[300],
+                    ),
+                  ),
+                  Positioned(
+                    left: 0,
+                    child: Container(
+                      height: 20,
+                      width: (bought_tickets / _maxValue) *
+                          MediaQuery.of(context).size.width,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: _getBarColor(
+                            widget.evnt.max_tickets - bought_tickets),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Slider to adjust the value
+
+            Text(
+              "Value: ${bought_tickets.toStringAsFixed(1)}",
+              style: const TextStyle(fontSize: 18),
+            ),
           ]),
     );
   }
@@ -647,38 +883,14 @@ class CreatorPage extends StatefulWidget {
 
 class _CreatorPage extends State<CreatorPage> {
   DateTime selectedDate = DateTime.now();
+  String _receivedMessage = 'tt';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Artifacts')),
-      body: Stack(
-        children: [
-          FutureBuilder<List<Event>>(
-            future: getAllEvents(),
-            builder: (context, snapshot) {
-              // Handling different states
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (snapshot.hasData) {
-                final items = snapshot.data!;
-                return ListView.builder(
-                  itemCount: items.length,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      leading:
-                          CircleAvatar(child: Text((index + 1).toString())),
-                      title: Text(items[index].title),
-                    );
-                  },
-                );
-              } else {
-                return const Center(child: Text('No data available.'));
-              }
-            },
-          ),
+      appBar: AppBar(title: Text('Events')),
+      body: ListView(
+        children: <Widget>[
           Positioned(
             bottom: 10,
             right: 200,
@@ -691,6 +903,34 @@ class _CreatorPage extends State<CreatorPage> {
                       return addEvent();
                     });
               }),
+            ),
+          ),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: 900), // Limit the height
+            child: FutureBuilder<List<Event>>(
+              future: getAllEvents(),
+              builder: (context, snapshot) {
+                // Handling different states
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (snapshot.hasData) {
+                  final items = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        leading:
+                            CircleAvatar(child: Text((index + 1).toString())),
+                        title: Text(items[index].title),
+                      );
+                    },
+                  );
+                } else {
+                  return const Center(child: Text('No data available.'));
+                }
+              },
             ),
           ),
         ],
@@ -708,117 +948,125 @@ class _CreatorPage extends State<CreatorPage> {
     return Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
         elevation: 16,
-        child: Column(children: <Widget>[
-          const Text('Event Erzeugen', textAlign: TextAlign.left),
-          const SizedBox(height: 10),
-          Container(
-              child: Column(children: <Widget>[
-            const Text('Eventtitel', textAlign: TextAlign.left),
-            Center(
-              child: SizedBox(
-                width: textWidth,
-                child: TextFormField(
-                  controller: _EventTitleController,
-                  decoration: const InputDecoration(labelText: 'Eventtitel'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Eventtitel';
-                    }
-                    return null;
-                  },
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Text('Event Erzeugen', textAlign: TextAlign.left),
+              const SizedBox(height: 10),
+              Container(
+                  child: Column(children: <Widget>[
+                const Text('Eventtitel', textAlign: TextAlign.left),
+                Center(
+                  child: SizedBox(
+                    width: textWidth,
+                    child: TextFormField(
+                      controller: _EventTitleController,
+                      decoration:
+                          const InputDecoration(labelText: 'Eventtitel'),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Eventtitel';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            const Text('Maximale Tickets', textAlign: TextAlign.left),
-            Center(
-              child: SizedBox(
-                width: textWidth,
-                child: TextFormField(
-                  controller: _EventMaxTicketsController,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration:
-                      const InputDecoration(labelText: 'Maximale Tickets'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Maximale Tickets';
-                    }
-                    return null;
-                  },
+                const SizedBox(
+                  height: 20,
                 ),
-              ),
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            const Text('Ticket Preis', textAlign: TextAlign.left),
-            Center(
-              child: SizedBox(
-                width: textWidth,
-                child: TextFormField(
-                  controller: _EventPriceController,
-                  decoration: const InputDecoration(labelText: 'Ticket Preis'),
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Ticket Preis';
-                    }
-                    return null;
-                  },
+                const Text('Maximale Tickets', textAlign: TextAlign.left),
+                Center(
+                  child: SizedBox(
+                    width: textWidth,
+                    child: TextFormField(
+                      controller: _EventMaxTicketsController,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration:
+                          const InputDecoration(labelText: 'Maximale Tickets'),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Maximale Tickets';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: blue_colour,
-                shape: const BeveledRectangleBorder(),
-              ),
-              onPressed: () => _selectDate(context),
-              child: const Text('Datum auswählen',
-                  style: TextStyle(fontFamily: 'Arial', color: Colors.white)),
-            ),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  shape: const BeveledRectangleBorder(),
-                  alignment: Alignment.centerLeft,
+                const SizedBox(
+                  height: 20,
                 ),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('Abbrechen',
-                    style: TextStyle(fontFamily: 'Arial', color: blue_colour)),
-              ),
-              Spacer(),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: blue_colour,
-                  shape: const BeveledRectangleBorder(),
-                  alignment: Alignment.centerRight,
+                const Text('Ticket Preis', textAlign: TextAlign.left),
+                Center(
+                  child: SizedBox(
+                    width: textWidth,
+                    child: TextFormField(
+                      controller: _EventPriceController,
+                      decoration:
+                          const InputDecoration(labelText: 'Ticket Preis'),
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Ticket Preis';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
                 ),
-                onPressed: () {
-                  createEvent(
-                      _EventTitleController.text,
-                      int.parse(_EventMaxTicketsController.text),
-                      0,
-                      (int.parse(_EventMaxTicketsController.text) / 2).toInt(),
-                      double.parse(_EventPriceController.text),
-                      DateTime.now(),
-                      context);
-                  Navigator.pop(context);
-                },
-                child: const Text('Event erstellen',
-                    style: TextStyle(fontFamily: 'Arial', color: Colors.white)),
-              ),
-            ]),
-          ])),
-        ]));
+                const SizedBox(
+                  height: 20,
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: blue_colour,
+                    shape: const BeveledRectangleBorder(),
+                  ),
+                  onPressed: () => _selectDate(context),
+                  child: const Text('Datum auswählen',
+                      style:
+                          TextStyle(fontFamily: 'Arial', color: Colors.white)),
+                ),
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      shape: const BeveledRectangleBorder(),
+                      alignment: Alignment.centerLeft,
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text('Abbrechen',
+                        style:
+                            TextStyle(fontFamily: 'Arial', color: blue_colour)),
+                  ),
+                  Spacer(),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: blue_colour,
+                      shape: const BeveledRectangleBorder(),
+                      alignment: Alignment.centerRight,
+                    ),
+                    onPressed: () {
+                      createEvent(
+                          _EventTitleController.text,
+                          int.parse(_EventMaxTicketsController.text),
+                          0,
+                          (int.parse(_EventMaxTicketsController.text) / 2)
+                              .toInt(),
+                          double.parse(_EventPriceController.text),
+                          DateTime.now(),
+                          context);
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Event erstellen',
+                        style: TextStyle(
+                            fontFamily: 'Arial', color: Colors.white)),
+                  ),
+                ]),
+              ])),
+            ]));
   }
 
   Future<void> _selectDate(BuildContext context) async {

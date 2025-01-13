@@ -5,9 +5,12 @@ import 'main.dart';
 import 'view.dart';
 import 'model.dart';
 
-String apiadress =
-    'https://saqs-b5h9dwfnfuewamam.francecentral-01.azurewebsites.net/api/';
-String webSocketAdress = apiadress;
+String apiadress = 'http://localhost:8000/api/';
+//'https://saqs-b5h9dwfnfuewamam.francecentral-01.azurewebsites.net/api/';
+
+String webSocketAdress = 'ws://localhost:8000/ws/';
+//'wss://saqs-b5h9dwfnfuewamam.francecentral-01.azurewebsites.net/ws/';
+
 String authorisation = '';
 String username = '';
 String token = '';
@@ -30,14 +33,30 @@ Future<Response> sendGET(String target) async {
   return response;
 }
 
-Future<Response> sendPOST(final body, String target) async {
-  final response = await post(
-    Uri.parse(apiadress + target),
-    headers: <String, String>{
+Future<Response> sendPOST(final body, String target, int headerTyp) async {
+  Map<String, String> header = <String, String>{};
+  if (headerTyp == 0) {
+    header = <String, String>{
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    };
+  }
+
+  if (headerTyp == 1) {
+    header = <String, String>{
+      'Access-Control-Allow-Origin': '*',
+      'Content-Type': 'application/json',
+    };
+  } else {
+    header = <String, String>{
       'Access-Control-Allow-Origin': '*',
       'Content-Type': 'application/json',
       'Authorization': 'Bearer ' + token
-    },
+    };
+  }
+  final response = await post(
+    Uri.parse(apiadress + target),
+    headers: header,
     body: body,
   );
   return response;
@@ -52,19 +71,14 @@ Future<void> logout(String name) async {
 
 Future<void> try_login(String uname, String pw, context) async {
   final body = jsonEncode({'password': pw, 'username': uname});
-  final response = await sendPOST(body, 'token/');
+  final response = await sendPOST(body, 'token/', 0);
   if (response.statusCode == 200) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(response.statusCode.toString())));
     final Map<String, dynamic> status = jsonDecode(response.body);
     username = uname;
     token = status['access'];
     await setUserID(uname); //status['position']
     await setUserPos(user_id);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Logging in...')),
-    );
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Logging in...')),
     );
@@ -86,14 +100,14 @@ Future<void> try_login(String uname, String pw, context) async {
 
 Future<void> setUserID(String name) async {
   final body = jsonEncode({'username': name});
-  final response = await sendPOST(body, 'user/getUserId/');
+  final response = await sendPOST(body, 'user/getUserId/', 3);
   final Map<String, dynamic> ID = jsonDecode(response.body);
   user_id = ID['user_id'];
 }
 
 Future<void> setUserPos(int id) async {
   final body = jsonEncode({'userid': id});
-  final response = await sendPOST(body, 'user/getEmployeePosition/');
+  final response = await sendPOST(body, 'user/getEmployeePosition/', 3);
   final Map<String, dynamic> pos = jsonDecode(response.body);
   isadmin = pos['jobPosition'];
 }
@@ -109,8 +123,7 @@ void buyTicket(
     'couponID': couponID,
     'ticketTyp': ticketType
   });
-  final response = await sendPOST(body, 'user/buyTicket/');
-  print(1);
+  sendPOST(body, 'user/buyTicket/', 3);
 }
 
 Future<void> createEvent(String title, int max_tickets, int bought_tickets,
@@ -122,7 +135,7 @@ Future<void> createEvent(String title, int max_tickets, int bought_tickets,
     'threshold_tickets': threshold,
     'base_price': base_price
   });
-  final response = await sendPOST(body, 'manage/createEvent/');
+  final response = await sendPOST(body, 'manage/createEvent/', 3);
   if (response.statusCode == 201) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(response.statusCode.toString())));
@@ -135,7 +148,7 @@ double getFee() {
 
 Future<Event> getEvent(String title) async {
   final body = jsonEncode({'title': title});
-  final response = await sendPOST(body, 'event/getEvent');
+  final response = await sendPOST(body, 'event/getEvent', 2);
   Event choosen = Event.fromJson(jsonDecode(response.body));
   return choosen;
 }
@@ -150,14 +163,14 @@ Future<List<Event>> getAllEvents() async {
 
 Future<String> getPosition(int uID) async {
   final body = jsonEncode({'userid': uID});
-  final response = await sendPOST(body, 'user/getEmployeePosition/');
+  final response = await sendPOST(body, 'user/getEmployeePosition/', 3);
   final Map<String, dynamic> choosen = jsonDecode(response.body);
   return choosen['position'];
 }
 
 Future<List<Gutschein>> getGutschein(int uID) async {
   final body = jsonEncode({'ownerID': uID});
-  final response = await sendPOST(body, 'user/listCoupons/');
+  final response = await sendPOST(body, 'user/listCoupons/', 3);
   final List<dynamic> jsonResponse = jsonDecode(response.body);
   final List<Gutschein> gutscheinList =
       jsonResponse.map((gutschein) => Gutschein.fromJson(gutschein)).toList();
