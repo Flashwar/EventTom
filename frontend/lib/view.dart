@@ -20,18 +20,10 @@ Color black_colour = Color.fromRGBO(33, 37, 41, 1.00);
 Color highlightColor = Color.fromRGBO(247, 192, 11, 1);
 Color barColor = Color.fromRGBO(6, 86, 167, 1);
 
-Event curEvent = new Event(
-    base_price: 1.0,
-    threshold_tickets: 1,
-    max_tickets: 1,
-    title: '',
-    bought_tickets: 1,
-    date: DateTime.now());
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  // This widget is the root of the application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -73,9 +65,9 @@ class _LoginPage extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Center(
-        // Das Formular wird mittig zentriert
+        // Centering Widget
         child: Padding(
-      padding: const EdgeInsets.all(16.0), // Abstand vom Rand
+      padding: const EdgeInsets.all(16.0),
       child: Form(
         key: _formKey,
         child: Column(
@@ -146,7 +138,7 @@ class _LoginPage extends State<LoginPage> {
             const SizedBox(height: 100),
             Center(
               child: InkWell(
-                child: const Text('Passwort vergessen'),
+                child: const Text('Passwort vergessen?'),
                 onTap: () {
                   showDialog(
                       context: context,
@@ -317,7 +309,7 @@ class _UserPage extends State<UserPage> {
                       return ListTile(
                         leading: CircleAvatar(
                             child: Image.asset(
-                                'assets/images/istockphoto-505963814-1024x1024.jpg') /*Text((index + 1).toString())*/),
+                                'assets/images/istockphoto-505963814-1024x1024.jpg')),
                         title: Text(items[index].title),
                         onTap: () {
                           Navigator.push(
@@ -398,11 +390,8 @@ class _EventView extends State<EventView> {
         final Map<String, dynamic> pos = jsonDecode(data);
         if (pos['message']['title'] == widget.evnt.title) {
           setState(() {
-            bought_tickets = 7;
-            //pos['message']['bought_tickets'];
+            bought_tickets = pos['message']['bought_tickets'];
           });
-
-          //widget.evnt.max_tickets - int.parse(pos['bought_tickets']);
         }
       },
       onError: (error) {
@@ -488,8 +477,11 @@ class _EventView extends State<EventView> {
                 color: red_colour,
               ),
               Text(
-                  (widget.evnt.base_price + (widget.evnt.base_price * getFee()))
-                      .toString(),
+                  'Basis Preis: ' +
+                      widget.evnt.base_price.toString() +
+                      '€, Gebühr:' +
+                      (widget.evnt.base_price * getFee()).toString() +
+                      '€',
                   textAlign: TextAlign.center),
               //
             ]),
@@ -535,17 +527,7 @@ class _EventView extends State<EventView> {
               ],
             ),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Text(
-                  (widget.evnt.base_price * _currentamount +
-                          ((widget.evnt.base_price * _currentamount) *
-                                      getFee() >
-                                  gutscheinWert
-                              ? (widget.evnt.base_price * _currentamount) *
-                                      getFee() -
-                                  gutscheinWert
-                              : 0))
-                      .toString(),
-                  textAlign: TextAlign.center),
+              getConditionalText(couponId),
               TextButton(
                   onPressed: () {
                     _vbuyTickets(getUserID(), widget.evnt.title, _currentamount,
@@ -562,6 +544,50 @@ class _EventView extends State<EventView> {
             ])
           ]),
     );
+  }
+
+// Text widget depending if Coupon is choosen or not
+  Text getConditionalText(int coupon) {
+    if (couponId != 0) {
+      return Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: (widget.evnt.base_price * _currentamount +
+                          ((widget.evnt.base_price * _currentamount) *
+                              getFee()))
+                      .toString() +
+                  '€ ',
+              style: TextStyle(
+                decoration: TextDecoration.lineThrough,
+              ),
+            ),
+            TextSpan(
+              text: (widget.evnt.base_price * _currentamount +
+                          ((widget.evnt.base_price * _currentamount) *
+                                      getFee() >
+                                  gutscheinWert
+                              ? (widget.evnt.base_price * _currentamount) *
+                                      getFee() -
+                                  gutscheinWert
+                              : 0))
+                      .toString() +
+                  '€ ',
+              style: TextStyle(
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Text(
+          (widget.evnt.base_price * _currentamount +
+                      ((widget.evnt.base_price * _currentamount) * getFee()))
+                  .toString() +
+              '€ ',
+          textAlign: TextAlign.center);
+    }
   }
 
   Widget chooseGutschein() {
@@ -591,6 +617,19 @@ class _EventView extends State<EventView> {
                   SizedBox(width: 40.0),
                   const Text('Gutscheine:', textAlign: TextAlign.left),
                 ]),
+                ListTile(
+                  title: Text('Keinen Gutschein wählen'),
+                  dense: true,
+                  visualDensity: VisualDensity(vertical: -3),
+                  onTap: () {
+                    setState(() {
+                      couponId = 0;
+                    });
+
+                    gutscheinWert = 0.0;
+                    Navigator.pop(context);
+                  },
+                ),
                 FutureBuilder<List<Gutschein>>(
                   future: getGutschein(getUserID()),
                   builder: (context, snapshot) {
@@ -612,7 +651,9 @@ class _EventView extends State<EventView> {
                             dense: true,
                             visualDensity: VisualDensity(vertical: -3),
                             onTap: () {
-                              couponId = items[index].id;
+                              setState(() {
+                                couponId = items[index].id;
+                              });
                               gutscheinWert = items[index].amount;
                               Navigator.pop(context);
                             },
