@@ -448,6 +448,12 @@ class _EventView extends State<EventView> {
               endIndent: 0,
               color: red_colour,
             ),
+            Image.asset(
+              'assets/images/istockphoto-1440928369-1024x1024.jpg',
+              width: 300,
+              height: 300,
+              fit: BoxFit.cover,
+            ),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Text('Verfügbare Tickets', textAlign: TextAlign.center),
               Divider(
@@ -498,6 +504,11 @@ class _EventView extends State<EventView> {
                 icon: Icon(Icons.add),
               ),
             ]),
+            Text(couponId == 0
+                ? 'Kein Gutschein ausgewählt.'
+                : 'Gutschein Wert: ' +
+                    gutscheinWert.toString() +
+                    '€ *Können nur von Gebühren abgezogen werden.'),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -591,6 +602,7 @@ class _EventView extends State<EventView> {
   }
 
   Widget chooseGutschein() {
+    //Widget opening Dialog Window for selection of a Coupon
     return Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
         elevation: 16,
@@ -618,6 +630,7 @@ class _EventView extends State<EventView> {
                   const Text('Gutscheine:', textAlign: TextAlign.left),
                 ]),
                 ListTile(
+                  //First Tile to deselect a coupon, resets Values
                   title: Text('Keinen Gutschein wählen'),
                   dense: true,
                   visualDensity: VisualDensity(vertical: -3),
@@ -631,6 +644,7 @@ class _EventView extends State<EventView> {
                   },
                 ),
                 FutureBuilder<List<Gutschein>>(
+                  //Lists all Coupons available for the current User
                   future: getGutschein(getUserID()),
                   builder: (context, snapshot) {
                     // Handling different states
@@ -661,7 +675,8 @@ class _EventView extends State<EventView> {
                         },
                       );
                     } else {
-                      return const Center(child: Text('No data available.'));
+                      return const Center(
+                          child: Text('Kein Gutschein vorhanden'));
                     }
                   },
                 ),
@@ -681,7 +696,6 @@ class _ManagerPage extends State<ManagerPage> {
   final _channel = WebSocketChannel.connect(
     Uri.parse(webSocketAdress + 'admin/notifications/'),
   );
-  String _receivedMessage = '';
 
   @override
   void dispose() {
@@ -733,7 +747,8 @@ class _ManagerPage extends State<ManagerPage> {
                   itemBuilder: (context, index) {
                     return ListTile(
                       leading:
-                          CircleAvatar(child: Text((index + 1).toString())),
+                          CircleAvatar(child: Image.asset(
+                                'assets/images/istockphoto-505963814-1024x1024.jpg')),
                       title: Text(items[index].title),
                       onTap: () {
                         Navigator.push(
@@ -793,9 +808,6 @@ class _ManagerEventView extends State<ManagerEventView> {
     super.initState();
     bought_tickets = widget.evnt.bought_tickets;
     _maxValue = widget.evnt.max_tickets;
-    print(widget.evnt.threshold_tickets);
-
-    print(widget.evnt.max_tickets * 0.1);
     _thresholdLow =
         widget.evnt.threshold_tickets - (widget.evnt.max_tickets * 0.1).toInt();
     _thresholdHigh =
@@ -845,6 +857,12 @@ class _ManagerEventView extends State<ManagerEventView> {
               indent: 20,
               endIndent: 0,
               color: red_colour,
+            ),
+            Image.asset(
+              'assets/images/istockphoto-1440928369-1024x1024.jpg',
+              width: 300,
+              height: 300,
+              fit: BoxFit.cover,
             ),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Text('Verfügbare Tickets', textAlign: TextAlign.center),
@@ -907,7 +925,7 @@ class _ManagerEventView extends State<ManagerEventView> {
             // Slider to adjust the value
 
             Text(
-              "Value: ${bought_tickets.toStringAsFixed(1)}",
+              "Gekaufte Tickets: ${bought_tickets.toString()}",
               style: const TextStyle(fontSize: 18),
             ),
           ]),
@@ -963,7 +981,8 @@ class _CreatorPage extends State<CreatorPage> {
                     itemBuilder: (context, index) {
                       return ListTile(
                         leading:
-                            CircleAvatar(child: Text((index + 1).toString())),
+                            CircleAvatar(child: Image.asset(
+                                'assets/images/istockphoto-505963814-1024x1024.jpg')),
                         title: Text(items[index].title),
                       );
                     },
