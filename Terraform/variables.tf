@@ -31,6 +31,7 @@ variable "laptop_linux_keypair" {
   description = "Keypair of my laptop"
 }
 
+
 variable "EVENTTOM_RDS_PASSWORD" {
   type = string
   sensitive = true
