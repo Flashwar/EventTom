@@ -27,7 +27,8 @@ variable "ami_ubuntu_2024LTS" {
 
 variable "laptop_linux_keypair" {
   type        = string
-  default     = "Laptop-Linux Key Pair"
+  default =  "Laptop-Windows"
+  #default     = "Laptop-Linux Key Pair"
   description = "Keypair of my laptop"
 }
 
