@@ -22,7 +22,7 @@ variable "instance_type" {
 
 variable "ami_ubuntu_2024LTS" {
   type    = string
-  default = "ami-0866a3c8686eaeeba"
+  default = "ami-04b4f1a9cf54c11d0"
 }
 
 variable "laptop_linux_keypair" {
