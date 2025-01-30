@@ -29,7 +29,7 @@ urlpatterns = [
     # Authentication endpoints provided by Django REST Framework
     #path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
-    path('/health',views.health_check),
+    path('health',views.health_check),
 
     # Include API routes defined in the 'backend' app
     path('api/', include('backend.urls')),

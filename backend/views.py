@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.http import JsonResponse
+from django.http import HttpResponse
 from injector import inject
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -328,5 +328,5 @@ class TicketTypListView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 def health_check(request):
-    return JsonResponse({"status": "ok"})
+    return HttpResponse("OK", status=200)
 
