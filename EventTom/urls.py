@@ -19,6 +19,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 from EventTom import settings
+from backend import views
 
 #
 urlpatterns = [
@@ -26,8 +27,9 @@ urlpatterns = [
     path("admin/", admin.site.urls),
 
     # Authentication endpoints provided by Django REST Framework
-    # @TODO maybe need to be deleted
     #path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+
+    path('/health',views.health_check),
 
     # Include API routes defined in the 'backend' app
     path('api/', include('backend.urls')),
