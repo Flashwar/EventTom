@@ -169,7 +169,6 @@ resource "aws_route" "ipv6_public_route" {
 }
 
 ### Security groups
-
 resource "aws_security_group" "sg_eventtom_ec2" {
   name   = "eventtom_ec2"
   vpc_id = aws_vpc.eventtom_vpc.id
@@ -279,7 +278,6 @@ resource "aws_security_group" "sg_eventtom_alb" {
 }
 
 #### RDS ####
-
 resource "aws_secretsmanager_secret" "eventtom_rds_password" {
   name                    = "EVENTTOM_RDS_PASSWORD"
   recovery_window_in_days = 0
