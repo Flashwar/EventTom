@@ -516,6 +516,7 @@ resource "aws_instance" "eventtom_ec2" {
   associate_public_ip_address = true
   key_name                    = var.laptop_linux_keypair
   iam_instance_profile        = data.aws_iam_instance_profile.vocareum_lab_instance_profile.name
+  count = 1
 
   user_data = <<-EOF
   #!/bin/bash
