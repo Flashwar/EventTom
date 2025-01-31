@@ -1,4 +1,4 @@
-name: CI Pipeline with Poetry
+name: test pipline
 
 on:
   push:
@@ -40,4 +40,4 @@ jobs:
           WEBSITE_HOSTNAME: "127.0.0.1"
         run: |
           poetry run python manage.py makemigrations
-          poetry run python manage.py test backend.tests
+          poetry run python manage.py test backend.tests --noinput

@@ -33,7 +33,7 @@ Das Projekt umfasst eine Eventmanagement-Webseite, die es Nutzern ermöglicht, T
 ![Alt-Text](ER_diagram.svg)
 ### Cloud Infrastructure
 
-![Alt-Text](cc_infrastructure_eventtom.png)
+![Alt-Text](CC_cloud_architecture.png)
 
 ## Installation
 

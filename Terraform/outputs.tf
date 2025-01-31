@@ -1,6 +1,6 @@
 output "load_balancer_dns_name" {
   description = "DNS name of the Load Balancer"
-  value       = aws_lb.eventtom_backend_alb.name
+  value       = aws_lb.eventtom_backend_alb.arn
 }
 
 output "public_ip" {
